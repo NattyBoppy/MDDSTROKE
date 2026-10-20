@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExoHand Live Hand</title>
+<meta name="description" content="Live realistic 3D hand that copies the real finger bend from the exoskeleton's flex sensors, over USB or Bluetooth.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<!-- three.js 0.160.0 from the jsDelivr CDN. "three/addons/" = GLTFLoader, OrbitControls, RoomEnvironment -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<!-- set the theme before the page draws, so it does not flash -->
+<script>
+  try { const t = JSON.parse(localStorage.getItem('exohand-v2-settings') || '{}').theme; if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>ExoHand</h1>
+    <p>Live finger tracker · v2</p>
+  </div>
+  <div class="topbar-right">
+    <span class="conn-pill" id="connPill" data-kind="none" role="status">Not connected</span>
+    <button class="ghost small" id="btnTheme" aria-label="Switch light or dark theme">Dark theme</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ================= LEFT / TOP: the 3D hand ================= -->
+  <section class="stage-col" aria-label="3D hand">
+    <div class="stage" id="stage">
+      <div class="stage-tools stage-top">
+        <div class="seg" role="group" aria-label="Which hand">
+          <button id="sideLeft" aria-pressed="false">Left hand</button>
+          <button id="sideRight" aria-pressed="true">Right hand</button>
+        </div>
+        <div class="seg" role="group" aria-label="Camera view">
+          <button data-view="default" aria-pressed="true">3/4</button>
+          <button data-view="back" aria-pressed="false">Back</button>
+          <button data-view="palm" aria-pressed="false">Palm</button>
+          <button data-view="side" aria-pressed="false">Side</button>
+        </div>
+      </div>
+
+      <div class="blocked-banner" id="blockedBanner" hidden role="alert">
+        <strong>BLOCKED</strong> finger resisting: motor stopped
+      </div>
+      <p class="stage-msg" id="modelMsg" hidden role="status"></p>
+      <p class="stage-loading" id="loading">Loading the hand…</p>
+
+      <div class="stage-tools stage-bottom">
+        <div class="swatches" role="group" aria-label="Skin tone">
+          <button class="swatch" data-skin="0" aria-label="Light skin" aria-pressed="true"></button>
+          <button class="swatch" data-skin="1" aria-label="Medium skin" aria-pressed="false"></button>
+          <button class="swatch" data-skin="2" aria-label="Deep skin" aria-pressed="false"></button>
+        </div>
+        <div class="row tight">
+          <button class="ghost small" id="btnGlb">Load your own hand (.glb)</button>
+          <input type="file" id="glbFile" accept=".glb,model/gltf-binary" hidden>
+          <button class="ghost small" id="btnBuiltIn" hidden>Use built-in hand</button>
+          <label class="check small" id="flipBox" hidden><input type="checkbox" id="flipBend"> Bend the other way</label>
+          <button class="ghost small" id="btnResetView">Reset view</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- one card per finger: % open and degrees bent -->
+    <ul class="finger-cards" id="fingerCards" aria-live="off"></ul>
+  </section>
+
+  <!-- ================= RIGHT / BOTTOM: panels ================= -->
+  <aside class="panels">
+
+    <!-- Safety controls. On phones this sticks to the bottom of the screen. -->
+    <section class="panel control-bar" aria-label="Motor controls">
+      <div class="state-line">
+        <span class="muted">Device</span>
+        <span class="state-badge" id="stateBadge" data-state="">—</span>
+      </div>
+      <div class="control-buttons">
+        <button id="cmdOpen" class="secondary">Open hand</button>
+        <button id="cmdClose" class="secondary">Close hand</button>
+        <button id="cmdStop" class="stop" aria-keyshortcuts="Space">STOP <small>Space</small></button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>1 · Connect</h2>
+      <div class="row">
+        <button class="primary" id="btnUsb">Connect by USB</button>
+        <button class="secondary" id="btnBle">Connect by Bluetooth</button>
+        <button class="secondary" id="btnDemo">Demo (no hardware)</button>
+        <button class="ghost" id="btnDisc" hidden>Disconnect</button>
+      </div>
+      <p class="status" id="status">Not connected. Plug the board into this laptop, then press Connect by USB.</p>
+      <p class="hint" id="support"></p>
+      <details>
+        <summary>Which browsers work?</summary>
+        <table class="mini">
+          <thead><tr><th>Browser</th><th>USB</th><th>Bluetooth</th></tr></thead>
+          <tbody>
+            <tr><td>Chrome / Edge on a laptop</td><td>✅</td><td>✅</td></tr>
+            <tr><td>Chrome on Android</td><td>❌</td><td>✅</td></tr>
+            <tr><td>iPhone / iPad (any browser)</td><td>❌</td><td>❌ demo only</td></tr>
+            <tr><td>Safari, Firefox</td><td>❌</td><td>❌ demo only</td></tr>
+          </tbody>
+        </table>
+        <p class="hint">USB and Bluetooth only work on an <b>https://</b> site (GitHub Pages, Netlify) or on <b>localhost</b>.</p>
+      </details>
+    </section>
+
+    <section class="panel">
+      <h2>2 · Fingers</h2>
+      <p class="hint" id="slidersHint">Sliders move the fingers in demo mode, and any finger that has no sensor.</p>
+      <div class="sliders" id="sliders"></div>
+      <div class="row">
+        <button class="secondary" id="btnAuto">Start auto open/close</button>
+      </div>
+      <fieldset class="choice">
+        <legend>Fingers with no sensor</legend>
+        <label class="check"><input type="radio" name="follow" value="index" checked> Copy the index finger</label>
+        <label class="check"><input type="radio" name="follow" value="slider"> Use their slider</label>
+      </fieldset>
+      <details id="demoOptions">
+        <summary>Demo options</summary>
+        <label class="check"><input type="checkbox" id="demoIndexOnly"> Pretend only the index has a sensor (old v1 "D," lines)</label>
+        <label class="check"><input type="checkbox" id="demoResist"> Pretend the finger resists the motor (shows BLOCKED)</label>
+      </details>
+    </section>
+
+    <section class="panel">
+      <h2>3 · Calibrate</h2>
+      <p class="hint">Hold the fingers straight → <b>Save straight</b>. Make a full fist → <b>Save fully bent</b>.
+        Until then the page guesses from the readings it has seen.</p>
+      <div class="row">
+        <button class="secondary" id="calAllStraight">Save straight (all)</button>
+        <button class="secondary" id="calAllBent">Save fully bent (all)</button>
+      </div>
+      <table class="cal-table">
+        <thead><tr><th>Finger</th><th>Now</th><th colspan="2">Save one finger</th><th class="desc">Saved</th></tr></thead>
+        <tbody id="calRows"></tbody>
+      </table>
+      <p class="status" id="calStatus"></p>
+      <div class="row">
+        <button class="ghost small" id="calExport">Export (.json)</button>
+        <button class="ghost small" id="btnCalImport">Import (.json)</button>
+        <input type="file" id="calFile" accept=".json,application/json" hidden>
+        <button class="ghost small" id="calClear">Clear</button>
+      </div>
+      <label class="check small"><input type="checkbox" id="bendRaises"> My sensors read <b>higher</b> when bent (only used before calibrating)</label>
+      <p class="hint" id="calModeHint"></p>
+    </section>
+
+    <section class="panel">
+      <h2>4 · Last 30 seconds</h2>
+      <h3>Flex: % open</h3>
+      <div class="legend" id="legendFlex"></div>
+      <canvas class="chart" id="chartFlex" aria-label="Percent open per finger, last 30 seconds"></canvas>
+      <h3>Servo angle</h3>
+      <div class="legend" id="legendServo"></div>
+      <canvas class="chart short" id="chartServo" aria-label="Servo angles, last 30 seconds"></canvas>
+      <h3>EMG envelope</h3>
+      <div class="legend" id="legendEmg"></div>
+      <canvas class="chart short" id="chartEmg" aria-label="EMG envelope with threshold, last 30 seconds"></canvas>
+      <label class="inline-field">Threshold line
+        <input type="number" id="emgThreshold" min="0" max="5000" step="5" value="100"> mV
+        <span class="hint">(display only, the firmware decides the trigger)</span></label>
+      <div class="row">
+        <button class="secondary" id="btnRec">● Start recording</button>
+        <button class="secondary" id="btnCsv" disabled>Download CSV</button>
+        <span class="hint" id="recInfo"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>5 · Device details</h2>
+      <ul class="facts">
+        <li><b id="fServo1">–</b><span>servo 1 (4 fingers)</span></li>
+        <li><b id="fServo2">–</b><span>servo 2 (thumb)</span></li>
+        <li><b id="fEmgExt">–</b><span>EMG extensor</span></li>
+        <li><b id="fEmgFlex">–</b><span>EMG flexor</span></li>
+        <li><b id="fEmgOn">–</b><span>EMG trigger</span></li>
+        <li><b id="fLines">0</b><span>lines read · <span id="fIgnored">0</span> ignored</span></li>
+      </ul>
+      <details>
+        <summary>Last lines from the device</summary>
+        <pre class="log" id="log"></pre>
+      </details>
+    </section>
+  </aside>
+</main>
+
+<footer class="footer">
+  <p>The website only sends three commands: <b>o</b> open, <b>c</b> close, <b>s</b> stop. The firmware owns every motor limit.
+  · <a href="../v1/">Website v1 (fallback)</a> · Hand model: WebXR generic-hand (MIT), see <a href="assets/models/LICENSE.txt">licence</a>.</p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
