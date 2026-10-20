@@ -10,16 +10,17 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 |---|---|
 | Mechanics (printed test finger) | ✅ MG90S + spool v4 + knuckle roller set pulls the printed finger fully straight |
 | Mechanics (real hand) | ⚠️ MG90S stalls at ~10–20 % resistance. Stronger motors bought (MG996R, STS3215), not yet tested on a hand |
-| Flex sensor | ⏳ bought (4.5" and 2.2"); DevKit test sketch ready, not yet tested |
+| Flex sensor | ⏳ bought (4.5" and 2.2"); DevKit sketches ready (`flex_devkit_test` = 1 finger, `multi_flex_devkit` = up to 5 + Bluetooth), not yet tested |
 | EMG | ❌ not working reliably yet (see 20 Oct). 1-hour limit tomorrow, then fall back to the DFRobot sensor |
 | Website v1 | ✅ works in demo mode (low-poly hand, USB + Bluetooth, calibration, CSV recording) |
-| Website v2 (realistic hand) | ⏳ prompt written (`docs/prompts/website_v2_prompt.md`), to be built with Claude Code |
+| Website v2 (realistic hand) | ✅ built and tested in demo mode (`website/v2/`). ⏳ not yet tried with a real flex sensor. GitHub Pages needs switching on once (see `website/v2/README.md`) |
 | Finger wrap / C-clamp | ⏳ 5 concepts drawn (`docs/concepts/A..E`), team to choose |
 
 ## To-do (in order)
 1. [ ] **EMG, maximum 1 hour** (21 Oct): ESP self-test → palm-side fist test on SIG → back of arm. If it fails, use the DFRobot sensor for the demo.
 2. [ ] **Flex sensor on the DevKit** (`firmware/flex/flex_devkit_test`): record the readings for a straight finger and a full fist.
-3. [ ] Build **website v2** with Claude Code using the prompt; connect it to the flex sensor.
+3. [x] Build **website v2** with Claude Code using the prompt (done 21 Oct). [ ] Connect it to the real flex sensor, calibrate, and check the finger follows.
+   - [ ] Switch on GitHub Pages: Settings → Pages → Source: **GitHub Actions**.
 4. [ ] **MG996R knob test** (`firmware/motors/mg996r_knob_test`) on a real finger: find the "just straight" angle.
 5. [ ] STS3215: test with the Feetech FD software first; photograph the FE-URT-2 header labels before wiring it to the ESP32.
 6. [ ] Choose the finger-wrap concept, measure finger sizes, design the clips + back-of-hand hub + table unit.
@@ -27,6 +28,45 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 8. [ ] Join EMG + motor: the EMG trigger opens the hand.
 
 ---
+
+## 21 Oct 2026: website v2 built (Claude Code)
+**What was built**
+- `website/v2/`: new dashboard with a **realistic 3D hand** (free MIT WebXR "generic-hand" models, left + right, copied into `assets/models/`).
+  - Skin material with sheen, slight clearcoat and a generated skin-texture map; soft studio lighting, soft ground shadow; 3 skin tones.
+  - All 5 fingers. Each finger has one "bend" value spread over the knuckles (MCP up to 75–90°, PIP 100°, DIP ≈ 2/3 of PIP). Smoothed (≈80 ms) so noisy sensors don't make it shake.
+  - The thumb swings across the front of the fist; the code works this swing out for whatever hand model is loaded.
+  - Finger cards: % open, degrees bent, and the angle at each joint.
+  - Connect by USB / Bluetooth (ExoHand) / Demo. Browser support message. A finger with no sensor copies the index or follows its slider (a setting).
+  - Calibration per finger (Save straight / Save fully bent), saved in the browser, export/import as .json. The demo has its own practice calibration.
+  - Big red STOP (Space key too), Open / Close. Only `o`, `c`, `s` are ever sent. BLOCKED shows a red "finger resisting: motor stopped" banner.
+  - 30-second charts: flex % open, servo angles, EMG with threshold line and ON bands. Record → Download CSV (20 rows/s).
+  - Light + dark theme, all colours are CSS variables. Works at phone width (STOP bar sticks to the bottom).
+  - "Load your own hand (.glb)": bones are matched by name; a clear message if it can't be used.
+- `firmware/flex/multi_flex_devkit/`: up to 5 flex sensors (index 4, middle 6, ring 7, little 8, thumb 9), `FITTED[5]` switch, sends `F,...` every 20 ms over USB **and** Bluetooth. No motor.
+- `website/index.html` (links to v1 and v2) + `.github/workflows/pages.yml` (publishes `website/` to GitHub Pages on every push to main).
+- v1 untouched.
+
+**Tests run**
+- Protocol parser: 8 unit tests, all pass (valid D/F/M/E lines, 31 garbage/boot-message lines ignored, lines split across chunks, only o/c/s allowed).
+- Browser test (headless Chrome, `website/v2/tests/demo.e2e.mjs`): **45/45 checks pass**, e.g.
+  - index slider 100 % → 0 %: joints go to MCP 75° / PIP 100° / DIP 67°, and the fingertip moves towards the palm;
+  - ESP32 boot lines ignored; Space and STOP → PAUSED; BLOCKED banner; v1 "D," lines drive the index; CSV download; custom .glb loads, a wrong file shows a message;
+  - phone width 390 px: no sideways scrolling, STOP visible; no console errors; v1 still loads;
+  - with a **pretend USB port and pretend Bluetooth device** (real code paths, fake hardware): calibrate 3000 straight / 2000 bent → reading 2500 shows 50 % open; a line split in two pieces is joined; Open / Space / STOP send exactly `o`, `s`, `s`.
+- Screenshots: `docs/screenshots/v2_desktop.png`, `v2_phone.png` (+ `v2_desktop_open.png`, `v2_desktop_dark.png`, `v2_blocked.png`).
+
+**Known issues**
+- `multi_flex_devkit.ino` was **not compiled** (no Arduino compiler in the cloud machine). Compile it in the Arduino IDE first.
+- Not yet tried with real hardware (USB / Bluetooth need a real board and real Chrome).
+- The WebXR hand is realistic in shape but simple in detail (no nails or wrinkles). A better rigged .glb can be loaded with the button.
+- The finger and thumb angles are tuned by eye. Change `FIST_ANGLES` / `TUNE` at the top of `website/v2/js/hand.js` if needed.
+- The EMG threshold line on the chart is display only (the firmware decides the trigger).
+
+**To-do**
+1. [ ] Switch on GitHub Pages (Settings → Pages → Source: GitHub Actions) and open the v2 link.
+2. [ ] One flex sensor on GPIO 4 with `flex_devkit_test` → Connect by USB → calibrate → bend: the index should follow.
+3. [ ] Then flash `multi_flex_devkit` (index only fitted) and try **Connect by Bluetooth**.
+4. [ ] Tune the fist look by eye with a real hand next to the screen.
 
 ## 20 Oct 2026: shopping, motor setup, EMG debugging day
 **Bought (Kuriosity):** STS3215 servo + FE-URT-2 board, MG996R, flex sensors, DFRobot ECG set, analog EMG board, electrode pads; batteries + resistors afterwards.

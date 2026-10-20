@@ -11,7 +11,7 @@ An NTU group project. A motor pulls a braided line along the back of each finger
 | ⚠️ Before testing on anyone | [SAFETY.md](SAFETY.md) |
 | 🤖 Using Claude / Claude Code on this repo | [CLAUDE.md](CLAUDE.md) (Claude reads it automatically) |
 | 🌐 Website v1 (working, low-poly hand) | [website/v1](website/v1) · how to use: [docs/website_v1_handoff.md](docs/website_v1_handoff.md) |
-| 🌐 Website v2 (realistic hand, in progress) | [website/v2](website/v2) · build prompt: [docs/prompts/website_v2_prompt.md](docs/prompts/website_v2_prompt.md) |
+| 🌐 Website v2 (realistic hand, 5 fingers) | [website/v2](website/v2) · how to use: [website/v2/README.md](website/v2/README.md) · live: https://nattyboppy.github.io/MDDSTROKE/v2/ (after Pages is switched on) |
 | 🔌 Arduino / ESP32 code | [firmware/](firmware) |
 | 🖨️ 3D-printable parts | [hardware/stl/](hardware/stl) |
 | 🖼️ Wiring diagrams + design concepts | [docs/wiring/](docs/wiring) · [docs/concepts/](docs/concepts) |
