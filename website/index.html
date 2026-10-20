@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExoHand Websites</title>
+<meta name="description" content="Finger tracker websites for the NTU stroke hand exoskeleton project.">
+<style>
+  :root { --bg:#edf1f0; --surface:#fff; --ink:#1e2b2a; --muted:#5b6b6a; --line:#d3dcda; --accent:#1e5f74; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#101716; --surface:#18211f; --ink:#e6efed; --muted:#9fb0ad; --line:#2c3a37; --accent:#5fb3c9; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px; }
+  h1 { margin: 0 0 4px; font-size: 1.75rem; }
+  p { color: var(--muted); margin: 0 0 24px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  a.card { display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:20px; }
+  a.card:hover, a.card:focus-visible { border-color: var(--accent); outline: none; }
+  a.card b { display:block; font-size:1.2rem; color: var(--accent); }
+  a.card span { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>ExoHand finger tracker</h1>
+  <p>NTU stroke hand exoskeleton. Open in Chrome or Edge on a laptop to connect the device by USB or Bluetooth.</p>
+  <div class="cards">
+    <a class="card" href="v2/"><b>Website v2 →</b><span>Realistic 3D hand, all five fingers, charts, calibration, demo mode.</span></a>
+    <a class="card" href="v1/"><b>Website v1 →</b><span>The first single-finger tracker (low-poly hand). Kept as a fallback.</span></a>
+  </div>
+</main>
+</body>
+</html>

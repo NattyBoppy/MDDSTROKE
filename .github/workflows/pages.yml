@@ -1,0 +1,36 @@
+# Publishes the website/ folder to GitHub Pages every time something is pushed to main.
+# One-time setup in GitHub: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# The site then appears at https://<owner>.github.io/<repo>/  (v1 at /v1/, v2 at /v2/).
+name: Publish website to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['website/**', '.github/workflows/pages.yml']
+  workflow_dispatch:        # also allows a manual "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the protocol parser still passes its tests
+        run: node --test website/v2/tests/protocol.test.mjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+      - id: deployment
+        uses: actions/deploy-pages@v4
