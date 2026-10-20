@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finger Tracker</title>
+<meta name="description" content="Live 3D view of a finger bend measured by a flex sensor on the hand exoskeleton.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mist:#EDF1F0;      /* page: pale clinic wall */
+    --paper:#FFFFFF;
+    --ink:#1E2B2A;       /* deep teal ink */
+    --slate:#5B6B6A;
+    --line:#D3DCDA;
+    --tape:#D9416F;      /* kinesiology-tape pink: the one accent, used only for live finger data */
+    --tape-soft:#FBE4EC;
+    --ok:#23795B;
+    --warn:#A3620B;
+    --radius-panel:18px;
+    --radius-ctl:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--mist); color:var(--ink);
+    font-family:"Atkinson Hyperlegible",system-ui,sans-serif; font-size:16px; line-height:1.45;
+  }
+  header{
+    display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:20px 28px 8px;
+  }
+  header h1{font-size:1.5rem; margin:0; letter-spacing:-0.01em}
+  header p{margin:0; color:var(--slate)}
+  main{
+    display:grid; grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);
+    gap:20px; padding:12px 28px 28px; align-items:start;
+  }
+  .stage{
+    position:relative; background:radial-gradient(120% 90% at 50% 35%, #FFFFFF 0%, #E3EAE8 100%);
+    border-radius:var(--radius-panel); height:min(78vh,760px); min-height:420px; overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .stage canvas{display:block; width:100%; height:100%; touch-action:none}
+  .stage-note{position:absolute; left:18px; bottom:14px; color:var(--slate); font-size:.875rem; margin:0}
+  .follow{position:absolute; right:16px; top:14px; display:flex; gap:8px; align-items:center;
+    background:rgba(255,255,255,.85); padding:6px 12px; border-radius:999px; font-size:.875rem; border:1px solid var(--line)}
+  .panel{display:flex; flex-direction:column; gap:14px}
+  section{background:var(--paper); border-radius:var(--radius-panel); padding:18px 20px; border:1px solid var(--line)}
+  section h2{font-size:1rem; margin:0 0 10px}
+  /* the readout: one big number, it is the reason the page exists */
+  .readout{padding:20px 22px 18px}
+  .angle{font-size:clamp(4.5rem,9vw,7.5rem); font-weight:700; line-height:.9; letter-spacing:-0.04em; color:var(--tape); font-variant-numeric:tabular-nums}
+  .angle small{font-size:.4em; letter-spacing:0; color:var(--ink); font-weight:400; margin-left:4px}
+  .verdict{font-size:1.25rem; font-weight:700; margin:10px 0 2px}
+  .facts{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0 0; padding:0; list-style:none}
+  .facts li{background:var(--mist); border-radius:var(--radius-ctl); padding:8px 10px}
+  .facts b{display:block; font-size:1.15rem; font-variant-numeric:tabular-nums}
+  .facts span{color:var(--slate); font-size:.8125rem}
+  .row{display:flex; gap:8px; flex-wrap:wrap}
+  button{
+    font:inherit; font-weight:700; color:var(--ink); background:var(--mist); border:1px solid var(--line);
+    border-radius:var(--radius-ctl); padding:10px 14px; cursor:pointer; min-height:44px;
+  }
+  button:hover:not(:disabled){background:#E1E8E6}
+  button.primary{background:var(--ink); color:#fff; border-color:var(--ink)}
+  button.primary:hover:not(:disabled){background:#2D3F3D}
+  button:disabled{opacity:.45; cursor:not-allowed}
+  button:focus-visible, input:focus-visible{outline:3px solid var(--tape); outline-offset:2px}
+  .status{margin:10px 0 0; font-size:.9375rem; color:var(--slate)}
+  .status.ok{color:var(--ok)} .status.warn{color:var(--warn)}
+  .cal{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .cal p{margin:6px 0 0; font-size:.875rem; color:var(--slate)}
+  input[type=range]{width:100%; accent-color:var(--tape)}
+  .chart{width:100%; height:150px; display:block}
+  .stats{display:flex; justify-content:space-between; gap:12px; margin:0 0 10px; color:var(--slate); font-size:.9375rem}
+  .stats b{color:var(--ink)}
+  .hint{font-size:.875rem; color:var(--slate); margin:8px 0 0}
+  footer{padding:0 28px 28px; color:var(--slate); font-size:.875rem}
+  @media (max-width:900px){
+    header{padding:16px 16px 4px}
+    main{grid-template-columns:1fr; padding:10px 16px 20px}
+    .stage{height:58vh; min-height:340px}
+    footer{padding:0 16px 20px}
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header>
+  <h1>Finger tracker</h1>
+  <p>Stroke hand exoskeleton: live index finger bend from the flex sensor</p>
+</header>
+
+<main>
+  <div class="stage" id="stage" aria-label="3D hand showing the measured finger bend">
+    <label class="follow"><input type="checkbox" id="followAll" checked> Other fingers copy the index</label>
+    <p class="stage-note">Drag to turn the hand. Pink strip = flex sensor.</p>
+  </div>
+
+  <div class="panel">
+    <section class="readout" aria-live="polite">
+      <div class="angle" id="angle">180<small>°</small></div>
+      <p class="verdict" id="verdict">Waiting for the sensor</p>
+      <ul class="facts">
+        <li><b id="openPct">–</b><span>open</span></li>
+        <li><b id="servoDeg">–</b><span>servo angle</span></li>
+        <li><b id="rawVal">–</b><span>sensor reading</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Connect the device</h2>
+      <div class="row">
+        <button class="primary" id="btnUsb">Connect by USB</button>
+        <button id="btnBle">Connect by Bluetooth</button>
+        <button id="btnDemo">Try demo</button>
+        <button id="btnDisc" hidden>Disconnect</button>
+      </div>
+      <p class="status" id="status">Not connected. Plug the board into this laptop, then press Connect by USB.</p>
+      <div id="demoBox" hidden>
+        <label for="demoSlider" class="hint">Demo: drag to open and close the finger</label>
+        <input type="range" id="demoSlider" min="0" max="100" value="100">
+      </div>
+    </section>
+
+    <section>
+      <h2>Move the finger</h2>
+      <div class="row">
+        <button id="cmdOpen" disabled>Open finger</button>
+        <button id="cmdClose" disabled>Close finger</button>
+        <button id="cmdStop" disabled>Stop</button>
+      </div>
+      <p class="hint">These do the same as the button on the device.</p>
+    </section>
+
+    <section>
+      <h2>Calibrate the sensor</h2>
+      <div class="cal">
+        <div><button id="calStraight" style="width:100%">Save straight</button><p id="calStraightVal">Not saved</p></div>
+        <div><button id="calBent" style="width:100%">Save fully bent</button><p id="calBentVal">Not saved</p></div>
+      </div>
+      <p class="hint">Hold the finger straight and press Save straight, then curl it fully and press Save fully bent. Until then the page guesses from the readings it has seen. <button id="calReset" style="min-height:0;padding:2px 8px;font-size:.8125rem">Clear</button></p>
+    </section>
+
+    <section>
+      <h2>Last 30 seconds</h2>
+      <div class="stats"><span>Best opening this session: <b id="best">–</b></span><span id="recInfo"></span></div>
+      <canvas class="chart" id="chart" aria-label="Finger angle over the last 30 seconds"></canvas>
+      <div class="row" style="margin-top:12px">
+        <button id="btnRec">Start recording</button>
+        <button id="btnCsv" disabled>Download recording (CSV)</button>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>Works in Chrome or Edge. USB works on laptops. Bluetooth works on laptops and Android phones, not on iPhone.</footer>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------------- 3D hand ---------------- */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+camera.position.set(-31, 9, 20);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, -3.5, 0); controls.enableDamping = true; controls.enablePan = false;
+controls.minDistance = 22; controls.maxDistance = 70;
+scene.add(new THREE.HemisphereLight(0xffffff, 0xC9D3D1, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(8, 14, 12); scene.add(sun);
+const rim = new THREE.DirectionalLight(0xffffff, 0.6); rim.position.set(-10, 4, -12); scene.add(rim);
+
+const skin = new THREE.MeshStandardMaterial({ color:0xE6C3A1, roughness:0.62 });
+const tape = new THREE.MeshStandardMaterial({ color:0xD9416F, roughness:0.45 });
+const hand = new THREE.Group(); scene.add(hand);
+
+// palm: rounded slab, back of hand faces +Z, fingers grow along +Y
+const pw = 8.6, pl = 8.8, pr = 1.6;
+const shape = new THREE.Shape();
+shape.moveTo(-pw/2+pr, -pl); shape.lineTo(pw/2-pr, -pl); shape.quadraticCurveTo(pw/2, -pl, pw/2, -pl+pr);
+shape.lineTo(pw/2, -pr); shape.quadraticCurveTo(pw/2, 0, pw/2-pr, 0); shape.lineTo(-pw/2+pr, 0);
+shape.quadraticCurveTo(-pw/2, 0, -pw/2, -pr); shape.lineTo(-pw/2, -pl+pr); shape.quadraticCurveTo(-pw/2, -pl, -pw/2+pr, -pl);
+const palmGeo = new THREE.ExtrudeGeometry(shape, { depth:1.6, bevelEnabled:true, bevelThickness:0.6, bevelSize:0.6, bevelSegments:6, curveSegments:16 });
+palmGeo.translate(0, 0, -0.8);
+hand.add(new THREE.Mesh(palmGeo, skin));
+const wrist = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.5, 6, 32), skin);
+wrist.scale.set(1.15, 1, 0.62); wrist.position.set(0, -pl-2.6, 0); hand.add(wrist);
+
+function makeFinger(lengths, radius, withTape){
+  const root = new THREE.Group(); const joints = []; let parent = root;
+  lengths.forEach((L, i) => {
+    const r = radius * (1 - i*0.07);
+    const j = new THREE.Group(); parent.add(j); joints.push(j);
+    j.add(new THREE.Mesh(new THREE.SphereGeometry(r*1.04, 24, 16), skin));
+    const seg = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(0.01, L - r), 8, 20), skin);
+    seg.position.y = L/2; j.add(seg);
+    if (withTape){
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(r*0.95, L*0.98, 0.12), tape);
+      strip.position.set(0, L/2, r*0.97); j.add(strip);
+    }
+    const next = new THREE.Group(); next.position.y = L; j.add(next); parent = next;
+  });
+  return { root, joints };
+}
+const fingers = [
+  { name:'index',  x:-3.05, L:[4.1,2.5,1.9], r:0.86 },
+  { name:'middle', x:-1.0,  L:[4.5,2.9,2.0], r:0.88 },
+  { name:'ring',   x: 1.05, L:[4.2,2.7,1.9], r:0.84 },
+  { name:'little', x: 3.05, L:[3.3,2.0,1.7], r:0.72 },
+].map((f, i) => {
+  const m = makeFinger(f.L, f.r, i === 0);
+  m.root.position.set(f.x, 0.25, 0); m.root.rotation.z = (f.x)*-0.025; hand.add(m.root);
+  return m;
+});
+// thumb (right hand seen from the back: thumb on the left)
+const thumb = makeFinger([3.0, 2.6, 2.2], 0.98, false);
+thumb.root.position.set(-pw/2+0.6, -pl+2.4, -0.5);
+thumb.root.rotation.set(-0.45, 0.15, 0.55);
+hand.add(thumb.root);
+hand.rotation.set(-0.1, 0, 0);
+
+// joint angles (degrees) at a full fist
+const MAX = { mcp:85, pip:100, dip:65 };
+function poseFinger(f, bend){
+  f.joints[0].rotation.x = -THREE.MathUtils.degToRad(MAX.mcp * bend);
+  f.joints[1].rotation.x = -THREE.MathUtils.degToRad(MAX.pip * bend);
+  f.joints[2].rotation.x = -THREE.MathUtils.degToRad(MAX.dip * bend);
+}
+function poseThumb(bend){
+  thumb.joints[1].rotation.x = -THREE.MathUtils.degToRad(35 * bend);
+  thumb.joints[2].rotation.x = -THREE.MathUtils.degToRad(50 * bend);
+  thumb.joints[0].rotation.z = THREE.MathUtils.degToRad(25 * bend);
+}
+
+function resize(){
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.zoom = Math.min(1, camera.aspect / 1.05); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage); resize();
+
+/* ---------------- data model ---------------- */
+const S = {
+  raw:null, servo:null, dev:'', bendTarget:0, bend:0,
+  seenMin:Infinity, seenMax:-Infinity, conn:null, demo:false,
+  hist:[], best:null, recording:false, rec:[], recStart:0,
+};
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const cal = store.get('flexCal') || { straight:null, bent:null };
+
+// default wiring (5V -> flex -> A0 -> 47k -> GND): bending raises the flex resistance, so the reading DROPS
+function bendFromRaw(raw){
+  let s = cal.straight, b = cal.bent;
+  if (s == null || b == null || s === b){
+    if (S.seenMax - S.seenMin < 15) return 0;
+    s = S.seenMax; b = S.seenMin;
+  }
+  return Math.min(1, Math.max(0, (s - raw) / (s - b)));
+}
+const angleOf = bend => 180 - 90*bend;
+
+let buffer = '';
+function feed(text){
+  buffer += text;
+  let i;
+  while ((i = buffer.indexOf('\n')) >= 0){
+    const line = buffer.slice(0, i).trim(); buffer = buffer.slice(i + 1);
+    const m = /^D,(-?\d+),(-?\d+)(?:,(\w+))?/.exec(line);
+    if (!m) continue;
+    S.raw = +m[1]; S.servo = +m[2]; S.dev = m[3] || '';
+    S.seenMin = Math.min(S.seenMin, S.raw); S.seenMax = Math.max(S.seenMax, S.raw);
+    S.bendTarget = bendFromRaw(S.raw);
+    sample();
+  }
+  if (buffer.length > 500) buffer = '';
+}
+function sample(){
+  const a = angleOf(S.bendTarget);
+  S.best = S.best == null ? a : Math.max(S.best, a);
+  if (S.recording){
+    S.rec.push({ t:((performance.now() - S.recStart)/1000).toFixed(2), raw:S.raw ?? '', angle:a.toFixed(1),
+                 open:Math.round((1 - S.bendTarget)*100), servo:S.servo ?? '', state:S.dev });
+  }
+}
+
+/* ---------------- UI helpers ---------------- */
+const $ = id => document.getElementById(id);
+function setStatus(msg, kind=''){ const el = $('status'); el.textContent = msg; el.className = 'status ' + kind; }
+function setConnected(on){
+  ['cmdOpen','cmdClose','cmdStop'].forEach(id => $(id).disabled = !on || S.demo);
+  $('btnDisc').hidden = !on;
+  $('btnUsb').disabled = on; $('btnBle').disabled = on;
+}
+function verdict(a){
+  if (S.raw == null && !S.demo) return 'Waiting for the sensor';
+  if (a >= 172) return 'Straight';
+  if (a >= 145) return 'Nearly straight';
+  if (a >= 118) return 'Half bent';
+  return 'Bent';
+}
+function showCal(){
+  $('calStraightVal').textContent = cal.straight == null ? 'Not saved' : `Saved at ${cal.straight}`;
+  $('calBentVal').textContent = cal.bent == null ? 'Not saved' : `Saved at ${cal.bent}`;
+}
+showCal();
+
+/* ---------------- USB (Web Serial) ---------------- */
+async function connectUsb(){
+  if (!('serial' in navigator)){ setStatus('USB needs Chrome or Edge on a laptop. Safari, Firefox and phones cannot open USB ports.', 'warn'); return; }
+  let port;
+  try { port = await navigator.serial.requestPort(); }
+  catch { setStatus('No board chosen. Press Connect by USB and pick the board (often "USB-SERIAL CH340" or "USB JTAG").'); return; }
+  try { await port.open({ baudRate:115200 }); }
+  catch { setStatus('That port is busy. Close the Arduino Serial Monitor, then try again.', 'warn'); return; }
+  stopDemo();
+  const dec = new TextDecoderStream(); const readDone = port.readable.pipeTo(dec.writable).catch(()=>{});
+  const reader = dec.readable.getReader();
+  const enc = new TextEncoderStream(); const writeDone = enc.readable.pipeTo(port.writable).catch(()=>{});
+  const writer = enc.writable.getWriter();
+  S.conn = {
+    kind:'usb',
+    send: t => writer.write(t),
+    close: async () => { try{ await reader.cancel(); await readDone; await writer.close(); await writeDone; await port.close(); } catch {} },
+  };
+  setConnected(true); setStatus('Connected by USB. Waiting for readings…', 'ok');
+  let got = false;
+  try {
+    while (true){
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (!got && /D,/.test(value)){ got = true; setStatus('Connected by USB. Readings coming in.', 'ok'); }
+      feed(value);
+    }
+  } catch {}
+  if (S.conn && S.conn.kind === 'usb') onDisconnected('USB disconnected. Plug the board back in and press Connect by USB.');
+}
+
+/* ---------------- Bluetooth (Nordic UART service) ---------------- */
+const NUS = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_RX = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+async function connectBle(){
+  if (!navigator.bluetooth){ setStatus('Bluetooth needs Chrome or Edge on a laptop or Android phone. iPhone browsers cannot use it.', 'warn'); return; }
+  try {
+    const dev = await navigator.bluetooth.requestDevice({ filters:[{ namePrefix:'ExoHand' }], optionalServices:[NUS] });
+    setStatus('Connecting to ' + dev.name + '…');
+    const gatt = await dev.gatt.connect();
+    const svc = await gatt.getPrimaryService(NUS);
+    const tx = await svc.getCharacteristic(NUS_TX);
+    const rx = await svc.getCharacteristic(NUS_RX);
+    await tx.startNotifications();
+    const td = new TextDecoder();
+    tx.addEventListener('characteristicvaluechanged', e => feed(td.decode(e.target.value)));
+    dev.addEventListener('gattserverdisconnected', () => onDisconnected('Bluetooth connection lost. Press Connect by Bluetooth to reconnect.'));
+    stopDemo();
+    S.conn = { kind:'ble', send: t => rx.writeValue(new TextEncoder().encode(t)), close: async () => dev.gatt.disconnect() };
+    setConnected(true); setStatus('Connected by Bluetooth to ' + dev.name + '.', 'ok');
+  } catch (err){
+    if (err && err.name === 'NotFoundError') setStatus('No device chosen. Make sure the board is on and named ExoHand, then try again.');
+    else setStatus('Could not connect by Bluetooth. Turn the board off and on, then try again.', 'warn');
+  }
+}
+async function disconnect(){
+  const c = S.conn; S.conn = null;
+  if (c) await c.close();
+  onDisconnected('Disconnected.');
+}
+function onDisconnected(msg){
+  S.conn = null; setConnected(false); setStatus(msg, msg === 'Disconnected.' ? '' : 'warn');
+}
+
+/* ---------------- demo ---------------- */
+function startDemo(){
+  if (S.conn) return;
+  S.demo = true; $('demoBox').hidden = false; $('btnDemo').textContent = 'Stop demo';
+  setStatus('Demo mode: no device connected. Drag the slider.');
+  S.bendTarget = 1 - $('demoSlider').value/100; sample();
+}
+function stopDemo(){ S.demo = false; $('demoBox').hidden = true; $('btnDemo').textContent = 'Try demo'; }
+$('demoSlider').addEventListener('input', e => { S.bendTarget = 1 - e.target.value/100; sample(); });
+
+/* ---------------- buttons ---------------- */
+$('btnUsb').onclick = connectUsb;
+$('btnBle').onclick = connectBle;
+$('btnDisc').onclick = disconnect;
+$('btnDemo').onclick = () => S.demo ? (stopDemo(), setStatus('Not connected. Plug the board into this laptop, then press Connect by USB.')) : startDemo();
+const send = t => S.conn && S.conn.send(t);
+$('cmdOpen').onclick = () => send('o\n');
+$('cmdClose').onclick = () => send('c\n');
+$('cmdStop').onclick = () => send('s\n');
+$('calStraight').onclick = () => {
+  if (S.raw == null){ setStatus('Connect the device first, so there is a reading to save.', 'warn'); return; }
+  cal.straight = S.raw; store.set('flexCal', cal); showCal();
+};
+$('calBent').onclick = () => {
+  if (S.raw == null){ setStatus('Connect the device first, so there is a reading to save.', 'warn'); return; }
+  cal.bent = S.raw; store.set('flexCal', cal); showCal();
+};
+$('calReset').onclick = () => { cal.straight = cal.bent = null; store.set('flexCal', cal); showCal(); };
+$('btnRec').onclick = () => {
+  S.recording = !S.recording;
+  if (S.recording){ S.rec = []; S.recStart = performance.now(); $('btnRec').textContent = 'Stop recording'; $('btnCsv').disabled = true; }
+  else { $('btnRec').textContent = 'Start recording'; $('btnCsv').disabled = S.rec.length === 0; }
+};
+$('btnCsv').onclick = () => {
+  const head = 'time_s,sensor_reading,finger_angle_deg,open_percent,servo_deg,device_state';
+  const rows = S.rec.map(r => [r.t, r.raw, r.angle, r.open, r.servo, r.state].join(','));
+  const blob = new Blob([head + '\n' + rows.join('\n')], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'finger-session-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.csv';
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+
+/* ---------------- chart ---------------- */
+const chart = $('chart'), ctx = chart.getContext('2d');
+function drawChart(now){
+  const dpr = Math.min(devicePixelRatio, 2), w = chart.clientWidth, h = chart.clientHeight;
+  if (chart.width !== w*dpr){ chart.width = w*dpr; chart.height = h*dpr; }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  const pad = { l:44, r:6, t:8, b:8 }, y = a => pad.t + (180 - a)/90*(h - pad.t - pad.b);
+  ctx.font = '12px "Atkinson Hyperlegible", sans-serif'; ctx.fillStyle = '#5B6B6A'; ctx.strokeStyle = '#E1E8E6'; ctx.lineWidth = 1;
+  [180,135,90].forEach(a => { ctx.beginPath(); ctx.moveTo(pad.l, y(a)); ctx.lineTo(w - pad.r, y(a)); ctx.stroke(); ctx.fillText(a + '°', 6, y(a) + 4); });
+  const span = 30000, x = t => pad.l + (1 - (now - t)/span)*(w - pad.l - pad.r);
+  if (S.hist.length > 1){
+    ctx.strokeStyle = '#D9416F'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    S.hist.forEach((p, i) => i ? ctx.lineTo(x(p.t), y(p.a)) : ctx.moveTo(x(p.t), y(p.a))); ctx.stroke();
+  }
+}
+
+/* ---------------- frame loop ---------------- */
+let lastHist = 0;
+function frame(now){
+  S.bend += (S.bendTarget - S.bend) * 0.22;
+  poseFinger(fingers[0], S.bend);
+  const others = $('followAll').checked ? S.bend : 0;
+  for (let i = 1; i < 4; i++) poseFinger(fingers[i], others);
+  poseThumb(others);
+  controls.update(); renderer.render(scene, camera);
+
+  const live = S.raw != null || S.demo;
+  const a = angleOf(S.bendTarget);
+  $('angle').innerHTML = (live ? Math.round(a) : '–') + '<small>°</small>';
+  $('verdict').textContent = verdict(a);
+  $('openPct').textContent = live ? Math.round((1 - S.bendTarget)*100) + '%' : '–';
+  $('servoDeg').textContent = S.servo == null ? '–' : S.servo + '°';
+  $('rawVal').textContent = S.raw == null ? '–' : S.raw;
+  $('best').textContent = S.best == null ? '–' : Math.round(S.best) + '°';
+  $('recInfo').textContent = S.recording ? `Recording: ${S.rec.length} readings` : (S.rec.length ? `${S.rec.length} readings saved` : '');
+
+  if (live && now - lastHist > 100){ S.hist.push({ t:now, a }); lastHist = now; }
+  while (S.hist.length && now - S.hist[0].t > 30000) S.hist.shift();
+  drawChart(now);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
