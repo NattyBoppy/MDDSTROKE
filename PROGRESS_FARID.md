@@ -5,29 +5,46 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
-## Current status (21 Oct 2026, 1 am)
+## Current status (21 Oct 2026, 6:30 pm)
 | Area | Status |
 |---|---|
 | Mechanics (printed test finger) | ✅ MG90S + spool v4 + knuckle roller set pulls the printed finger fully straight |
 | Mechanics (real hand) | ⚠️ MG90S stalls at ~10–20 % resistance. Stronger motors bought (MG996R, STS3215), not yet tested on a hand |
-| Flex sensor | ⏳ bought (4.5" and 2.2"); DevKit sketches ready (`flex_devkit_test` = 1 finger, `multi_flex_devkit` = up to 5 + Bluetooth), not yet tested |
-| EMG | ❌ not working reliably yet (see 20 Oct). 1-hour limit tomorrow, then fall back to the DFRobot sensor |
+| Flex sensor | ⚠️ circuit + code work, but the sensor tested only changes 11k → 12k when bent (a good one roughly doubles). Test the other sensors / bending direction. Tinkercad virtual test set up |
+| EMG | ✅ **working (1 channel)**: clear spikes on both flexors and extensors. Root cause of 20 Oct failure: ESP32 not making contact in the breadboard; it now sits off the breadboard on female-to-male jumpers |
 | Website v1 | ✅ works in demo mode (low-poly hand, USB + Bluetooth, calibration, CSV recording) |
 | Website v2 (realistic hand) | ✅ built and tested in demo mode (`website/v2/`). ⏳ not yet tried with a real flex sensor. GitHub Pages needs switching on once (see `website/v2/README.md`) |
 | Finger wrap / C-clamp | ⏳ 5 concepts drawn (`docs/concepts/A..E`), team to choose |
 
 ## To-do (in order)
-1. [ ] **EMG, maximum 1 hour** (21 Oct): ESP self-test → palm-side fist test on SIG → back of arm. If it fails, use the DFRobot sensor for the demo.
-2. [ ] **Flex sensor on the DevKit** (`firmware/flex/flex_devkit_test`): record the readings for a straight finger and a full fist.
-3. [x] Build **website v2** with Claude Code using the prompt (done 21 Oct). [ ] Connect it to the real flex sensor, calibrate, and check the finger follows.
-   - [ ] Switch on GitHub Pages: Settings → Pages → Source: **GitHub Actions**.
-4. [ ] **MG996R knob test** (`firmware/motors/mg996r_knob_test`) on a real finger: find the "just straight" angle.
+1. [x] EMG works (1 channel, 21 Oct). [ ] Optional: run `firmware/emg/emg_redboard_devkit` and screenshot the ON blocks for POC1.
+2. [ ] **Flex sensor:** multimeter-test every sensor (flat vs wrapped round a pen, printed side outward, both directions); keep the one that changes most. Use ~16k fixed resistor (3 × 47k side by side). Record straight vs fist readings with `firmware/flex/flex_visual_test`.
+3. [x] Website v2 built (21 Oct). [ ] Connect it to the real flex sensor, calibrate, check the finger follows. [ ] Switch on GitHub Pages: Settings → Pages → Source: **GitHub Actions**. [ ] Compile `multi_flex_devkit` in the Arduino IDE.
+4. [ ] **MG996R knob test** (`firmware/motors/mg996r_knob_test`) on a real finger: find the "just straight" angle. Backup "finger straight" signal if the flex sensors are weak.
 5. [ ] STS3215: test with the Feetech FD software first; photograph the FE-URT-2 header labels before wiring it to the ESP32.
 6. [ ] Choose the finger-wrap concept, measure finger sizes, design the clips + back-of-hand hub + table unit.
 7. [ ] Join flex + motor: the motor stops when the flex sensor says "straight".
-8. [ ] Join EMG + motor: the EMG trigger opens the hand.
+8. [ ] Join EMG + motor: the EMG trigger opens the hand. Later: 2nd channel (DFRobot on flexors, GPIO 2) as a "veto", both shown as % of max effort.
 
 ---
+
+## 21 Oct 2026 (lab, 12–6 pm): EMG fixed, flex sensor tests
+**EMG: solved ✅**
+- ESP self-test (`emg_step_test`, Serial Monitor): green wire to ground and to 3V3 gave **no change (~39)** → pin 1 was not connected.
+- Pressing the DevKit hard into the breadboard made the values change → **the DevKit was not making contact in the breadboard**. This was the cause of the whole flat-line problem on 20 Oct.
+- Fix: DevKit taken **off the breadboard**, wired with **female-to-male jumpers** (pin 1 → line Y, GND → ground rail).
+- Self-test after the fix: ground → **0 mV**, 3V3 → **3152 mV** (the ESP's max reading), line Y → 0–1 mV at rest. ✅
+- With fresh pads: **clear spikes and waves** on the Serial Plotter when moving the fingers, on the **flexors (palm side)** and on the **extensors (back of forearm)**, tested one side at a time.
+- Lessons: always run the ESP self-test first; keep the ESP off worn breadboard holes; signal pads must not touch (≈2 cm centre to centre); the reference snap on our cable is the one that beeps with the plug's base metal.
+- Plan: for now, extensor above its threshold for 0.2 s = "open". Later the flexor channel acts as a veto (co-contraction / spasm), both scaled to % of max effort.
+
+**Flex sensor: circuit works, sensor response too small ⚠️**
+- Wiring: 3V3 → flex → GPIO 4 + 47k → GND (ESP off the breadboard, flex on croc clips / standing in a small breadboard). Diagram: `docs/wiring/flex_wiring.png`.
+- `flex_devkit_test`: steady reading **~3190–3205** (≈2.5 V at the pin = sensible for a flat ~11–15k sensor), but **no visible change when bent**.
+- Multimeter on the sensor alone (no circuit): **~11k flat → ~12k bent**. A healthy flex sensor roughly doubles (e.g. 10k → 20k+). Another sketch showed ~6.3–6.4k with only a few hundred ohms of change when bent.
+- Conclusion: the wiring and code are fine; this sensor barely responds. To check: bending direction (printed side on the outside of the curve, bend the middle not the base), other sensors, and a ~16k fixed resistor (3 × 47k side by side) for better sensitivity.
+- New sketch `firmware/flex/flex_visual_test`: learns "flat" in 3 s, auto-zooms, shows **bend %** in the Serial Plotter or a text bar in the Serial Monitor (compile-checked against stand-in functions only).
+- Virtual tests: Wokwi (ESP32-S3 + slider standing in for the sensor) and **Tinkercad** (Arduino Uno + real flex-sensor part + 47k, code in `firmware/flex/tinkercad_uno_flex`). Tinkercad tip: power the Uno from USB only, not from the virtual power supply.
 
 ## 21 Oct 2026: website v2 built (Claude Code)
 **What was built**
