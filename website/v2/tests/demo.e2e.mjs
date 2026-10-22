@@ -280,6 +280,13 @@ try {
   await hw.waitForTimeout(300);
   check((await hw.textContent('#connPill')).trim() === 'Not connected', 'fake USB: Disconnect works');
 
+  // --- sensor not connected to 3V3: readings stuck near 0 ---
+  await hw.click('#btnUsb');
+  for (let i = 0; i < 6; i++) await feed('__usb', `D,${2 + (i % 4)},0,IDLE\n`, 150);
+  check(/reads about 0/.test(await hw.textContent('#status')), 'fake USB: readings of 1-5 → "not connected to 3V3" message');
+  await hw.click('#btnDisc');
+  await hw.waitForTimeout(300);
+
   // --- wrong sketch flashed (Serial Plotter format): the page should say so ---
   await hw.click('#btnUsb');
   for (let i = 0; i < 18; i++) await feed('__usb', 'bend_%:12,flat:0,most_bent:100\r\n', 200);

@@ -520,7 +520,14 @@ function updateUi(now) {
     } else if (silent && !wrongFormat && S.linkNote !== 'silent') {
       S.linkNote = 'silent';
       setStatus('Connected, but nothing is arriving from the board. Check that the right sketch is flashed and press the board\'s RST button.', 'warn');
-    } else if (!silent && S.lastGoodAt > S.connectedAt && S.linkNote !== 'live') {
+    } else if (!silent && railReading(now) && S.linkNote !== 'rail') {
+      // a reading stuck at the very bottom or top is a wiring problem, not a bend
+      S.linkNote = 'rail';
+      const r = railReading(now);
+      setStatus(r.low
+        ? `${r.name} reads about 0: the pin sees 0 V, so the flex sensor is not connected to 3V3. Check the 3V3 wire and the clips on the sensor's two pins (see docs/wiring/flex_sensor_wiring.png).`
+        : `${r.name} reads about 4095: the pin sees the full 3.3 V. Check the 47k resistor to GND (it may be missing or loose).`, 'warn');
+    } else if (!silent && !railReading(now) && S.lastGoodAt > S.connectedAt && S.linkNote !== 'live') {
       S.linkNote = 'live';
       setStatus(S.mode === 'usb' ? 'Connected by USB. Readings coming in.' : 'Connected by Bluetooth. Readings coming in.', 'ok');
     }
@@ -528,6 +535,16 @@ function updateUi(now) {
 }
 
 /* ---------------- helpers ---------------- */
+// Is a live sensor stuck at 0 V or 3.3 V? Returns { name, low } or null.
+function railReading(now) {
+  for (let i = 0; i < 5; i++) {
+    if (!hasSensor(i, now)) continue;
+    if (S.raw[i] < 40) return { name: LABEL[FINGERS[i]], low: true };
+    if (S.raw[i] > 4060) return { name: LABEL[FINGERS[i]], low: false };
+  }
+  return null;
+}
+
 function sum(a) { return a.reduce((s, v) => s + v, 0); }
 function r(v) { return Math.round(v) + '°'; }
 function stamp() { return new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-'); }
