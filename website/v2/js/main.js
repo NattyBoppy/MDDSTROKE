@@ -35,7 +35,7 @@ const S = {
   servo1: null, servo2: null, servoAt: 0,
   state: '',
   emg: { ext: null, flex: null, on: false, at: 0 },
-  lines: 0, ignored: 0, lastGoodAt: 0,
+  lines: 0, ignored: 0, lastGoodAt: 0, lastAnyAt: 0,
   log: [],
   recording: false, rec: [], recStart: 0,
 };
@@ -52,6 +52,7 @@ const buffer = new LineBuffer(handleLine);
 function handleLine(line) {
   const msg = parseLine(line);
   logLine(line, !!msg);
+  S.lastAnyAt = performance.now();
   if (!msg) { S.ignored++; return; }
   S.lines++;
   const now = performance.now();
@@ -137,6 +138,7 @@ function resetLive() {
   S.state = '';
   S.emg = { ext: null, flex: null, on: false, at: 0 };
   S.lastGoodAt = 0;
+  S.lastAnyAt = 0;
 }
 
 async function connect(kind) {
@@ -509,9 +511,15 @@ function updateUi(now) {
   // connected but silent?
   if (S.conn) {
     const silent = now - Math.max(S.lastGoodAt, S.connectedAt || 0) > 3000;
-    if (silent && S.linkNote !== 'silent') {
+    // text IS arriving, but none of it is in our format: almost always the wrong sketch
+    const wrongFormat = silent && now - S.lastAnyAt < 2000 && S.lastAnyAt > (S.connectedAt || 0);
+    if (wrongFormat && S.linkNote !== 'format') {
+      S.linkNote = 'format';
+      setStatus('The board is sending text, but not in the ExoHand format (see "Last lines from the device" in section 5). '
+        + 'A Serial Plotter sketch like flex_visual_test is probably flashed. Upload flex_devkit_test or multi_flex_devkit instead.', 'warn');
+    } else if (silent && !wrongFormat && S.linkNote !== 'silent') {
       S.linkNote = 'silent';
-      setStatus('Connected, but no readings are arriving. Check that the right sketch is flashed (115200 baud) and press the board\'s RST button.', 'warn');
+      setStatus('Connected, but nothing is arriving from the board. Check that the right sketch is flashed and press the board\'s RST button.', 'warn');
     } else if (!silent && S.lastGoodAt > S.connectedAt && S.linkNote !== 'live') {
       S.linkNote = 'live';
       setStatus(S.mode === 'usb' ? 'Connected by USB. Readings coming in.' : 'Connected by Bluetooth. Readings coming in.', 'ok');

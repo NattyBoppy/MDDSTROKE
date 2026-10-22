@@ -280,6 +280,13 @@ try {
   await hw.waitForTimeout(300);
   check((await hw.textContent('#connPill')).trim() === 'Not connected', 'fake USB: Disconnect works');
 
+  // --- wrong sketch flashed (Serial Plotter format): the page should say so ---
+  await hw.click('#btnUsb');
+  for (let i = 0; i < 18; i++) await feed('__usb', 'bend_%:12,flat:0,most_bent:100\r\n', 200);
+  check(/not in the ExoHand format/.test(await hw.textContent('#status')), 'fake USB: Serial Plotter lines → "wrong sketch" message');
+  await hw.click('#btnDisc');
+  await hw.waitForTimeout(300);
+
   // --- Bluetooth, new board (multi_flex_devkit sends F lines in 20-byte pieces) ---
   await hw.evaluate(() => { window.__sent.length = 0; });
   await hw.click('#btnBle');
