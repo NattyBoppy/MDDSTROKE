@@ -27,6 +27,7 @@ It works over **USB** or **Bluetooth**, and has a **Demo** mode that needs no ha
 6. Pick the port under **Tools → Port**, then press the **→ Upload** arrow.
 
 Wiring for each sensor (3.3 V only, **never 5 V**): `3V3 → flex sensor → GPIO pin → 47k resistor → GND`.
+Picture: [docs/wiring/flex_sensor_wiring.png](../../docs/wiring/flex_sensor_wiring.png)
 Pins: index **4**, middle **6**, ring **7**, little **8**, thumb **9**.
 
 ### 2. Close the Arduino Serial Monitor
