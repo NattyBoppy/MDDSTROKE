@@ -5,12 +5,12 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
-## Current status (21 Oct 2026, 6:30 pm)
+## Current status (22 Oct 2026, 6:30 pm)
 | Area | Status |
 |---|---|
 | Mechanics (printed test finger) | ✅ MG90S + spool v4 + knuckle roller set pulls the printed finger fully straight |
 | Mechanics (real hand) | ⚠️ MG90S stalls at ~10–20 % resistance. Stronger motors bought (MG996R, STS3215), not yet tested on a hand |
-| Flex sensor | ⚠️ circuit + code work, but the sensor tested only changes 11k → 12k when bent (a good one roughly doubles). Test the other sensors / bending direction. Tinkercad virtual test set up |
+| Flex sensor | ⚠️ **working on the Arduino Uno + 5-LED bar graph**, but weak: only ~20 points of 1023 on a normal 10k divider. With the Uno's 1.1 V "zoom" (100k from 5V to A0, flex A0 → GND) it moves ~60–80 points. Readings creep/drift, so it is good for straight / half / fully bent, not smooth steps. Works in ONE bend direction only |
 | EMG | ✅ **working (1 channel)**: clear spikes on both flexors and extensors. Root cause of 20 Oct failure: ESP32 not making contact in the breadboard; it now sits off the breadboard on female-to-male jumpers |
 | Website v1 | ✅ works in demo mode (low-poly hand, USB + Bluetooth, calibration, CSV recording) |
 | Website v2 (realistic hand) | ✅ built and tested in demo mode (`website/v2/`). ⏳ not yet tried with a real flex sensor. GitHub Pages needs switching on once (see `website/v2/README.md`) |
@@ -18,7 +18,7 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ## To-do (in order)
 1. [x] EMG works (1 channel, 21 Oct). [ ] Optional: run `firmware/emg/emg_redboard_devkit` and screenshot the ON blocks for POC1.
-2. [ ] **Flex sensor:** multimeter-test every sensor (flat vs wrapped round a pen, printed side outward, both directions); keep the one that changes most. Use ~16k fixed resistor (3 × 47k side by side). Record straight vs fist readings with `firmware/flex/flex_visual_test`.
+2. [x] Flex sensor responds (22 Oct, Uno + LEDs). [ ] Try the other flex sensors for a stronger one (aim: 100+ points change). [ ] Tape the sensor along a finger (working side as tested) and record straight vs fist readings. [ ] Consider buying genuine Spectra Symbol 4.5" sensors.
 3. [x] Website v2 built (21 Oct). [ ] Connect it to the real flex sensor, calibrate, check the finger follows. [ ] Switch on GitHub Pages: Settings → Pages → Source: **GitHub Actions**. [ ] Compile `multi_flex_devkit` in the Arduino IDE.
 4. [ ] **MG996R knob test** (`firmware/motors/mg996r_knob_test`) on a real finger: find the "just straight" angle. Backup "finger straight" signal if the flex sensors are weak.
 5. [ ] STS3215: test with the Feetech FD software first; photograph the FE-URT-2 header labels before wiring it to the ESP32.
@@ -27,6 +27,28 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 8. [ ] Join EMG + motor: the EMG trigger opens the hand. Later: 2nd channel (DFRobot on flexors, GPIO 2) as a "veto", both shown as % of max effort.
 
 ---
+
+## 22 Oct 2026: flex sensor + 5 LED bar graph (Arduino Uno)
+**Setup** (`firmware/flex/flex_5led_uno`): Arduino Uno (COM8), flex on A0, 5 red LEDs on pins 12, 11, 10, 9, 8 with 10k each (dim but visible). The code:
+- runs an LED check at start, then learns "flat" in 2 s;
+- `b` + Send learns "fully bent", `r` re-learns flat;
+- ignores small wobble (NOISE), and only changes the LED count when the bend is clearly past a step (hysteresis).
+
+**Tests and numbers**
+1. Partner resistor 2 × 47k in series (≈94k): reading ≈ 126 untouched, wobble ±3, bend change ≈ 10–12 points → LEDs flickered ("haywire") because the change was about the size of the noise.
+2. Bent the other way: reading 126 → 112–116 (≈12 points).
+3. 10k partner: straight ≈ 535–546 (drifts), bent ≈ 555 → change ≈ 15–23 points. With `b` calibration, 4 LEDs at full bend.
+4. The sensor only responds in **one bend direction** (here: printed side on the inside of the curve, opposite to the usual rule). Bending the other way = 0 %.
+5. **Zoom trick** (`ZOOM_1V1 = true`, Uno measures 0–1.1 V): 50k on top put the reading at ~1000, too close to the 1023 ceiling. With **100k (2 × 50k) from 5V to A0 and flex from A0 to GND** it works, with a bigger change. Still not smooth: creep after bending, plus contact wiggle on croc clips/breadboard.
+
+**Lessons**
+- The online demo was a Tinkercad simulation (perfect virtual sensor). Real resistive flex sensors creep, have hysteresis, and depend on where and how tightly they bend.
+- Pick the partner resistor near the sensor's own resistance (or use the 1.1 V zoom for weak sensors). 94k was far too big for an ~11–14k sensor.
+- For the device we only need "finger straight → stop the motor", which this sensor can do once it's taped to the finger. Backup: the motor's position (MG996R angle / STS3215 position + load).
+
+**Also made today**
+- Tinkercad layouts (Uno + flex + 47k, and flex + 5 LEDs) and Uno code for virtual tests. Tinkercad has no ESP32; the Uno uses 5V/A0, the ESP32 uses 3V3/GPIO 4.
+- ESP32 version of the bar graph (`firmware/flex/flex_5led_esp32`, LEDs on GPIO 10–14, flex on GPIO 4) + wiring diagram.
 
 ## 21 Oct 2026 (lab, 12–6 pm): EMG fixed, flex sensor tests
 **EMG: solved ✅**
