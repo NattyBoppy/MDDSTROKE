@@ -5,7 +5,7 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
-## Current status (22 Oct 2026, 6:30 pm)
+## Current status (23 Oct 2026, 5 pm)
 | Area | Status |
 |---|---|
 | Mechanics (printed test finger) | ✅ MG90S + spool v4 + knuckle roller set pulls the printed finger fully straight |
@@ -14,7 +14,8 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 | EMG | ✅ **working (1 channel)**: clear spikes on both flexors and extensors. Root cause of 20 Oct failure: ESP32 not making contact in the breadboard; it now sits off the breadboard on female-to-male jumpers |
 | Website v1 | ✅ works in demo mode (low-poly hand, USB + Bluetooth, calibration, CSV recording) |
 | Website v2 (realistic hand) | ✅ built and tested in demo mode (`website/v2/`). ⏳ not yet tried with a real flex sensor. GitHub Pages needs switching on once (see `website/v2/README.md`) |
-| Finger wrap / C-clamp | ⏳ 5 concepts drawn (`docs/concepts/A..E`), team to choose |
+| Finger wrap / C-clamp | ✅ **v8 designed** (`hardware/stl/finger_clamps_v8`): 3 TPU clamps per finger, sized to a real hand + 3 mm foam, press-stud elastic strap, U-loop line, flex sensor slot. ⏳ not yet printed |
+| Motor layout | ✅ compared on-hand (A) vs table-top unit (B) in `docs/design/hand_unit_layout.html`. **B chosen for V1.** ⚠️ one MG996R for 4 fingers may be too weak (≈ 6 N per finger), needs a force test |
 
 ## To-do (in order)
 1. [x] EMG works (1 channel, 21 Oct). [ ] Optional: run `firmware/emg/emg_redboard_devkit` and screenshot the ON blocks for POC1.
@@ -22,11 +23,55 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 3. [x] Website v2 built (21 Oct). [ ] Connect it to the real flex sensor, calibrate, check the finger follows. [ ] Switch on GitHub Pages: Settings → Pages → Source: **GitHub Actions**. [ ] Compile `multi_flex_devkit` in the Arduino IDE.
 4. [ ] **MG996R knob test** (`firmware/motors/mg996r_knob_test`) on a real finger: find the "just straight" angle. Backup "finger straight" signal if the flex sensors are weak.
 5. [ ] STS3215: test with the Feetech FD software first; photograph the FE-URT-2 header labels before wiring it to the ESP32.
-6. [ ] Choose the finger-wrap concept, measure finger sizes, design the clips + back-of-hand hub + table unit.
+6. [x] Finger clamps designed (v8, 23 Oct), finger widths measured. [ ] Print one middle-finger set in TPU 95A and test-fit with foam. [ ] Measure segment lengths (knuckle crease to crease) so the clamp lengths and strap holes fit. [ ] Design the back-of-hand plate (flex sensor clamps, balance bar, sheath stop) + the table unit box.
+6b. [ ] **Force test**: luggage scale on one finger of the test hand, pull needed to open it. Compare with ≈ 6 N per finger (one MG996R, 120°, 22 mm spool). [ ] Check if our MG996R turns 180° with a 500–2500 µs pulse range.
 7. [ ] Join flex + motor: the motor stops when the flex sensor says "straight".
 8. [ ] Join EMG + motor: the EMG trigger opens the hand. Later: 2nd channel (DFRobot on flexors, GPIO 2) as a "veto", both shown as % of max effort.
 
 ---
+
+## 23 Oct 2026: finger clamps v1 → v8, motor layout A vs B (with Claude)
+**What changed**
+- New finger interface: `hardware/stl/finger_clamps_v8/` (12 STLs + one 12-part print plate), made by `hardware/cad_scripts/make_finger_clamps.py`. How to print and assemble it: the README in that folder.
+- Two interactive design pages in `docs/design/` (open in Chrome):
+  - `finger_clamps.html`: 3D hand, one-clamp view, strap on/off animation, sizes, assembly.
+  - `hand_unit_layout.html`: design A (servos on the hand) vs design B (table-top unit), flex sensor mounting, spool and force numbers, DevKit wiring.
+- Preview pictures in `docs/previews/finger_clamps/`. README, CLAUDE.md and SAFETY.md (new clamp skin checks) updated.
+
+**How the design got here (v1 → v8)**
+1. v1: 3 TPU C-clamps per finger (70 % wrap, palm-side opening, fingertip open), elastic through a tunnel, lock pins, one line + knot at the tip.
+2. TPU is fixed at 95A (school filament). The softness is set by the wall thickness instead (1.8 mm now; 1.2–1.4 mm if too stiff).
+3. Sized to real caliper readings: base / tip widths index 16.1 / 14.2, middle 15.0 / 14.2, ring 14.9 / 13.8, pinky 12.5 / 11.5 mm (the middle segment is the average).
+4. U-loop line (up one side, round the tip, back down) for a straight pull with no knot at the tip.
+5. The strap moved from tunnel + lock pins (fiddly, damaged the elastic) to **press studs** (on and off with no tools).
+6. Flex sensor slot (7.2 × 1.0 mm) added under the line channels.
+7. **+3 mm inner size** for a 1.5 mm foam liner. File names now carry the version (`_v7`, `_v8`).
+8. v8: the tip clamp's nose is now a small pulley, so both line holes are full circles.
+
+**Tests (on the computer, nothing printed yet)**
+- All 13 STLs are closed, one-piece solids (watertight check).
+- Studs centred on every clamp (x = −2.30…+2.30 mm) and stick out 1.9 mm.
+- Tip clamps: both line holes measure a full 1.4 × 1.4 mm at the end face. The nose stays clear of the flex sensor slot.
+- The script in the repo makes byte-identical STLs to the ones sent on 23 Oct.
+- Line: PE 4.0 (0.32 mm, 42 lb ≈ 190 N) vs 1.4 mm channels → plenty of room and strength.
+
+**What went wrong**
+- The first slicer check used **old files** (tunnel and an off-centre pin hole, no studs). Fix: version numbers in every file name. Only print `_v8`.
+- In v7 the tip nose half-covered both line holes ("half-moon" holes). Fixed in v8.
+
+**Numbers to remember (estimates, still to measure)**
+- Line travel, fist to straight: ≈ 40–47 mm per finger.
+- MG996R datasheet: 9.4 kgf·cm at 4.8 V, 11 kgf·cm at 6 V, ≈ 120° rotation, 55 g, stall ≈ 2.5 A.
+- At 120°: spool radius ≈ 22 mm → ≈ 48 N line pull at stall at 6 V → ≈ 6 N per finger in steady use (4 fingers, half of stall). At 180°: 15 mm spool → ≈ 9 N per finger.
+- Sheath friction loses ≈ 20–40 %.
+
+**To-do**
+1. [ ] Print one middle-finger set (base, middle, tip) in TPU 95A. Test-fit with 1.5 mm foam on the hand.
+2. [ ] Measure segment lengths (3 per finger) so clamp lengths and strap holes are exact.
+3. [ ] Strap: punch 3 mm holes; check it stays on when making a fist.
+4. [ ] Force test with a luggage scale (see To-do 6b above).
+5. [ ] Decide: one servo for 4 fingers, or both servos on the fingers (index + middle, ring + little) with the thumb in V2.
+6. [ ] Design the back-of-hand plate + table unit box once the clamps fit.
 
 ## 22 Oct 2026: flex sensor + 5 LED bar graph (Arduino Uno)
 **Setup** (`firmware/flex/flex_5led_uno`): Arduino Uno (COM8), flex on A0, 5 red LEDs on pins 12, 11, 10, 9, 8 with 10k each (dim but visible). The code:

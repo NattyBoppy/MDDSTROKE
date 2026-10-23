@@ -7,6 +7,12 @@
 - [ ] Big servos are on the bench supply **adjustable** output (6.0 V, current limit set), never on the ESP32. Grounds are shared.
 - [ ] Stop immediately if there's pain, the finger is forced past straight, or the servo buzzes against a stalled finger.
 
+## Finger clamps (anything strapped to the hand)
+- [ ] Foam liner fitted in every clamp. No bare TPU edges on the skin.
+- [ ] After 15 minutes, take the clamps off and check for red marks or dents. Stop if a mark is still there after 10 minutes.
+- [ ] Clamps must slide on and off without forcing the finger. Never force a clenched finger open to fit a clamp.
+- [ ] The fishing line runs inside the clamp channels only, never directly against the skin.
+
 ## EMG / anything on the skin
 - [ ] Laptop **charger unplugged** (run on battery). No bench supply or motor on the EMG breadboard.
 - [ ] EMG board on its two 9 V batteries only. Clip the batteries on last and unclip them first.
