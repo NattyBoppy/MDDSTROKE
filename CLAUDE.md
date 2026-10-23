@@ -36,9 +36,11 @@ website/v2/          new realistic-hand website (being built)
 firmware/flex/       flex sensor sketches (Nano, XIAO, DevKit)
 firmware/motors/     MG996R knob test, STS3215 (Feetech bus servo) knob test
 firmware/emg/        EMG sketches for the red analog EMG board (+VS/GND/-VS) and the DFRobot sensor
-hardware/stl/        printable parts (knuckle roller + anchors, back-of-hand servo mount, spools)
-hardware/cad_scripts python generators (need: pip install trimesh manifold3d numpy)
+hardware/stl/        printable parts. Latest finger interface: finger_clamps_v8/ (TPU C-clamps, see its README).
+                     Older: knuckle roller + anchors, back-of-hand MG90S mount, spools
+hardware/cad_scripts python generators (need: pip install trimesh manifold3d numpy). make_finger_clamps.py makes the v8 clamps
 docs/                wiring diagrams, concept sheets, previews, prompts, website v1 handoff
+docs/design/         self-contained 3D design pages (finger clamps, motor layout A vs B). Open in Chrome
 PROGRESS_FARID.md    running log of what was done / worked / failed / to-do. UPDATE IT after each work session.
 SAFETY.md            safety checklist for testing on people
 ```
@@ -48,7 +50,9 @@ SAFETY.md            safety checklist for testing on people
 |---|---|
 | Brain | ESP32-S3 DevKit N16R8 ("YD-ESP32-S3"). Arduino board "ESP32S3 Dev Module", Flash 16MB, PSRAM OPI, plug into the **USB-UART** USB-C port |
 | Also used | Arduino Nano (POC board with button + OLED), Seeed XIAO ESP32S3 (runs out of pins for 5 fingers) |
-| Flex sensors | 4.5" and 2.2". Wiring: 3V3 → flex → ADC pin → 47k → GND. Bending lowers the reading |
+| Flex sensors | 4.5" and 2.2". Wiring: 3V3 → flex → ADC pin → 47k → GND. Bending lowers the reading. On the hand: pin end fixed on the back-of-hand plate, the rest slides through the slot in each clamp |
+| Finger clamps | v8, TPU 95A (school filament, hardness fixed). 3 per finger, 70 % wrap, inner size = finger + 3 mm for a 1.5 mm foam liner. Elastic strap on press studs; U-loop line round a pulley nose on the tip clamp |
+| Line | Braided PE 4.0 (0.32 mm, 42 lb). Clamp channels are Ø1.4 mm |
 | EMG | Red analog EMG board (Muscle Sensor V3 style: +VS, GND, -VS / SIG, GND), powered by 2 × 9 V (±9 V); SIG → 47k → 47k → [pin] → 47k → GND. Also a DFRobot AD8232 heart sensor (weak for EMG but usable) |
 | Motors | MG90S (too weak on a real hand), MG996R, Feetech STS3215 (serial bus, FE-URT-2 board, 1,000,000 baud, library FTServo_Arduino), DS3218 possible |
 
