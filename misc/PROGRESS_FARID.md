@@ -30,6 +30,16 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
+## 1 Nov 2026: repo tidy-up (Claude Code)
+- Clean branch made from `main`, then reorganised:
+  - `PROGRESS_FARID.md` → `misc/`; `SAFETY.md` → `docs/`.
+  - Website v1 removed (still in git history). `website/index.html` now forwards to v2.
+  - `docs/wiring`, `docs/concepts`, `docs/prompts` and the v1 handoff → `docs/old/`.
+  - 3D parts grouped by the date they were added: `hardware/2026-10-21/` (spool v4, hand mount, knuckle set) and `hardware/2026-10-23/` (finger clamps v8), each with its own `cad_scripts/`.
+  - README rewritten: one motor, 4 fingers, no thumb (diagram drawn in Mermaid, editable as text). `CLAUDE.md` updated to match.
+- Tests: protocol 8/8, browser 45/45, no broken links.
+- Found: the repo had been switched to Private, which takes GitHub Pages offline (404). Make it Public again to bring the site back.
+
 ## 23 Oct 2026: finger clamps v1 → v8, motor layout A vs B (with Claude)
 **What changed**
 - New finger interface: `hardware/stl/finger_clamps_v8/` (12 STLs + one 12-part print plate), made by `hardware/cad_scripts/make_finger_clamps.py`. How to print and assemble it: the README in that folder.

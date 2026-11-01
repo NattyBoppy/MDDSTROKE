@@ -7,8 +7,8 @@ A motor pulls a braided fishing line that runs along the back of each finger and
 - **EMG** on the forearm detects the patient *trying* to open the hand → triggers the motor.
 - A **flex sensor** on the back of the finger measures the bend → acts as the **"finger is straight, stop" ceiling**.
 - A **website** shows a 3D hand that copies the real finger bend live (USB or Bluetooth).
-- Plan: 4 fingers on one motor through a balance bar (whiffletree), the thumb on its own motor.
-  The motors sit in a **table-top unit**. The lines reach the hand inside a coil sheath (Bowden cable), like SNU's Exo-Glove.
+- Current plan: **one motor** opens the **4 fingers** through a balance bar (whiffletree). **No thumb for now.**
+  The motor sits in a **table-top unit**. The lines reach the hand inside a coil sheath (Bowden cable), like SNU's Exo-Glove.
 - Milestones: POC1 Thu 22 Oct 2026, POC2 29 Oct, CA2 demo 5 Nov 2026 (graded on need-statement fit, casing/materials, electronics, AI-powered app).
 - Later phases add a display on the table unit, plus machine learning that compares the flexor and extensor EMG to decide open or close.
 
@@ -31,18 +31,23 @@ The lead (Farid / KID) is a UI/UX designer and maker, **not a software engineer*
 
 ## Repo layout
 ```
-website/v1/          working single-file tracker (three.js low-poly hand). Do not break it, keep as fallback.
-website/v2/          new realistic-hand website (being built)
+README.md            front page of the repo (keep it short and current)
+CLAUDE.md            this file. Must stay in the top folder: Claude Code only reads it from there
+website/v2/          the live hand tracker website (the only website; v1 was removed 1 Nov, it is still in git history)
+website/index.html   just forwards visitors to v2/
 firmware/flex/       flex sensor sketches (Nano, XIAO, DevKit)
 firmware/motors/     MG996R knob test, STS3215 (Feetech bus servo) knob test
 firmware/emg/        EMG sketches for the red analog EMG board (+VS/GND/-VS) and the DFRobot sensor
-hardware/stl/        printable parts. Latest finger interface: finger_clamps_v8/ (TPU C-clamps, see its README).
-                     Older: knuckle roller + anchors, back-of-hand MG90S mount, spools
-hardware/cad_scripts python generators (need: pip install trimesh manifold3d numpy). make_finger_clamps.py makes the v8 clamps
-docs/                wiring diagrams, concept sheets, previews, prompts, website v1 handoff
+hardware/<date>/     3D parts grouped by the date they were added (YYYY-MM-DD). New parts go in a new date folder.
+  2026-10-21/        spool_v4, hand_mount (back-of-hand MG90S), knuckle_anchor_set + their cad_scripts
+  2026-10-23/        finger_clamps_v8 (latest finger interface, see its README) + cad_scripts/make_finger_clamps.py
+                     cad_scripts need: pip install trimesh manifold3d numpy
+docs/SAFETY.md       safety checklist: read before every test on a person
 docs/design/         self-contained 3D design pages (finger clamps, motor layout A vs B). Open in Chrome
-PROGRESS_FARID.md    running log of what was done / worked / failed / to-do. UPDATE IT after each work session.
-SAFETY.md            safety checklist for testing on people
+docs/previews/       preview pictures of the parts
+docs/screenshots/    website screenshots
+docs/old/            out-of-date material kept for reference: wiring, concepts, prompts, website v1 handoff
+misc/PROGRESS_FARID.md  running log of what was done / worked / failed / to-do. UPDATE IT after each work session.
 ```
 
 ## Hardware facts
@@ -63,9 +68,9 @@ SAFETY.md            safety checklist for testing on people
 | 2 | EMG channel B (flexor, later) |
 | 4 | flex: index (the first single sensor goes here) |
 | 6 / 7 / 8 | flex: middle / ring / little |
-| 9 | flex: thumb |
-| 5 | servo 1 signal (4 fingers) |
-| 16 | servo 2 signal (thumb) |
+| 9 | flex: thumb (not used for now) |
+| 5 | servo signal (the one motor, 4 fingers) |
+| 16 | spare (was planned for a thumb servo) |
 | 17 / 18 | Serial1 TX / RX to the FE-URT-2 board (STS3215), only once its header is confirmed 3.3 V-safe |
 
 ## Device ↔ website protocol (115200 baud USB serial, or Bluetooth Nordic UART "ExoHand")
@@ -82,6 +87,6 @@ Bluetooth NUS UUIDs: service 6E400001-B5A3-F393-E0A9-E50E24DCCA9E, RX (write) 6E
 ## Working style for Claude in this repo
 - Keep the website **static, no build step**: plain HTML/CSS/ES modules, three.js from a pinned CDN version. Friends must be able to open the files and edit them.
 - Write comments in plain English.
-- Small commits with clear messages. Don't delete v1.
-- After every session, append to `PROGRESS_FARID.md` under today's date: what changed, tests run (with numbers), what worked, what failed, and the to-do list.
-- Public repo: no personal data, no patient or tester names or health details, no emails or keys.
+- Small commits with clear messages.
+- After every session, append to `misc/PROGRESS_FARID.md` under today's date: what changed, tests run (with numbers), what worked, what failed, and the to-do list.
+- Keep the repo **public** (GitHub Pages needs that on a free account): no personal data, no patient or tester names or health details, no emails or keys.

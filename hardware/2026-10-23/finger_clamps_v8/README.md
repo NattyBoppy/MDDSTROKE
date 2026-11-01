@@ -21,7 +21,7 @@ Interactive 3D preview, strap demo and assembly steps: open [`docs/design/finger
 - `<finger>_1_base_v8.stl`, `<finger>_2_middle_v8.stl`, `<finger>_3_tip_v8.stl` for index, middle, ring and pinky (12 parts).
 - `ALL_12_print_plate_v8.stl`: all 12 laid out on one plate.
 - `sizes.json`: every size, made by the script.
-- Made by [`hardware/cad_scripts/make_finger_clamps.py`](../../cad_scripts/make_finger_clamps.py). To resize, change `FINGERS` at the top and run it again. If you change the shape, bump `VERSION` so the file names change.
+- Made by [`cad_scripts/make_finger_clamps.py`](../cad_scripts/make_finger_clamps.py). To resize, change `FINGERS` at the top and run it again. If you change the shape, bump `VERSION` so the file names change.
 
 **Only print files ending in `_v8`.** Older files (with a rectangular tunnel and a pin hole off to one side) are out of date.
 
@@ -64,4 +64,4 @@ The middle-segment width is the average of base and tip. All 12 clamps together 
 - Strap too stiff to press on → punch 3.5 mm holes. Strap pops off when the hand closes → punch 2.5 mm holes, or make the stud head bigger in the script.
 - Clamp too tight or too loose → change the width in `FINGERS` by 0.5 mm and run the script again.
 - After a few sessions, check whether the line is cutting a groove into the TPU at the tip nose.
-- Check the skin for red marks after 15 minutes of wear (see [SAFETY.md](../../../SAFETY.md)).
+- Check the skin for red marks after 15 minutes of wear (see [SAFETY.md](../../../docs/SAFETY.md)).

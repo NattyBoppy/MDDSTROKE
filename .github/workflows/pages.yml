@@ -1,6 +1,7 @@
 # Publishes the website/ folder to GitHub Pages every time something is pushed to main.
 # One-time setup in GitHub: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
-# The site then appears at https://<owner>.github.io/<repo>/  (v1 at /v1/, v2 at /v2/).
+# The site then appears at https://<owner>.github.io/<repo>/  (the hand tracker is at /v2/).
+# Note: on a free GitHub account, Pages only works while the repo is PUBLIC.
 name: Publish website to GitHub Pages
 
 on:

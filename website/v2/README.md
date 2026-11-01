@@ -4,7 +4,7 @@ A dashboard that shows a **realistic 3D hand** copying the real fingers, live, f
 It works over **USB** or **Bluetooth**, and has a **Demo** mode that needs no hardware.
 
 - Online (after GitHub Pages is switched on, see below): **https://nattyboppy.github.io/MDDSTROKE/v2/**
-- Website v1 (the old one, kept as a fallback): https://nattyboppy.github.io/MDDSTROKE/v1/
+- The link only works while the GitHub repo is **Public** (free GitHub accounts can't publish Pages from a private repo).
 
 ![v2 on a laptop](../../docs/screenshots/v2_desktop.png)
 
@@ -27,7 +27,7 @@ It works over **USB** or **Bluetooth**, and has a **Demo** mode that needs no ha
 6. Pick the port under **Tools → Port**, then press the **→ Upload** arrow.
 
 Wiring for each sensor (3.3 V only, **never 5 V**): `3V3 → flex sensor → GPIO pin → 47k resistor → GND`.
-Picture: [docs/wiring/flex_sensor_wiring.png](../../docs/wiring/flex_sensor_wiring.png)
+Picture: [docs/old/wiring/flex_sensor_wiring.png](../../docs/old/wiring/flex_sensor_wiring.png)
 Pins: index **4**, middle **6**, ring **7**, little **8**, thumb **9**.
 
 ### 2. Close the Arduino Serial Monitor

@@ -5,7 +5,7 @@
 
   It starts a small web server for website/, opens v2, starts the demo, moves the sliders,
   checks the 3D fingers really bend (fingertips move towards the palm), presses Open / STOP / Space,
-  checks there are no console errors, saves desktop + phone screenshots, and checks v1 still loads.
+  checks there are no console errors, saves desktop + phone screenshots, and checks the landing page opens v2.
 
   If your network blocks cdn.jsdelivr.net, point THREE_LOCAL at an unpacked three@0.160.0 npm package
   (npm pack three@0.160.0 && tar xzf three-0.160.0.tgz) and the test serves three.js from there:
@@ -312,19 +312,10 @@ try {
   check(hwErrors.length === 0, `no console errors with fake hardware${hwErrors.length ? ': ' + hwErrors.join(' | ') : ''}`);
   await fakeHw.close();
 
-  // ================= v1 still works =================
-  const v1 = await openPage(`${base}/v1/`, { width: 1280, height: 800 });
-  await v1.page.waitForSelector('#stage canvas', { timeout: 15000 });
-  await v1.page.click('#btnDemo');
-  await v1.page.waitForTimeout(500);
-  check(await v1.page.isVisible('#demoSlider'), 'v1 still loads and its demo slider appears');
-  check(v1.errors.length === 0, `no console errors in v1${v1.errors.length ? ': ' + v1.errors.join(' | ') : ''}`);
-  await v1.context.close();
-
-  // ================= landing page =================
+  // ================= landing page sends visitors to v2 =================
   const home = await openPage(`${base}/`, { width: 1000, height: 700 });
-  const links = await home.page.$$eval('a', as => as.map(a => a.getAttribute('href')));
-  check(links.includes('v1/') && links.includes('v2/'), `website/index.html links to v1 and v2 (${links.join(', ')})`);
+  await home.page.waitForURL(/\/v2\/$/, { timeout: 10000 }).catch(() => {});
+  check(/\/v2\/$/.test(home.page.url()), `website/index.html redirects to v2 (${home.page.url()})`);
   await home.context.close();
 } catch (err) {
   console.error(err);

@@ -16,7 +16,7 @@ Z=0 face: no supports needed.
 All sizes in millimetres. Edit FINGERS below to resize.
 
 How to run (needs: pip install trimesh manifold3d numpy):
-    python hardware/cad_scripts/make_finger_clamps.py
+    python hardware/2026-10-23/cad_scripts/make_finger_clamps.py
 If you change the shape, bump VERSION so the file names change too.
 """
 import json, math, os
@@ -33,8 +33,8 @@ TAPER = 0.96           # far end of each clamp is 4% smaller (fingers taper)
 H_RATIO = 0.85         # finger thickness / finger width (fingers are oval)
 FOAM = 1.5             # foam liner per side -> inner size = finger + 3 mm
 VERSION = "v8"         # in every file name, so old downloads can't get mixed in
-# STLs go to hardware/stl/finger_clamps_<VERSION>/ (next to this scripts folder)
-OUT = os.path.join(HERE, "..", "stl", f"finger_clamps_{VERSION}")
+# STLs go to finger_clamps_<VERSION>/ next to this cad_scripts folder (same date folder)
+OUT = os.path.join(HERE, "..", f"finger_clamps_{VERSION}")
 os.makedirs(OUT, exist_ok=True)
 SEG = 128              # smoothness of curves
 

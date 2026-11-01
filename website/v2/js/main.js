@@ -525,7 +525,7 @@ function updateUi(now) {
       S.linkNote = 'rail';
       const r = railReading(now);
       setStatus(r.low
-        ? `${r.name} reads about 0: the pin sees 0 V, so the flex sensor is not connected to 3V3. Check the 3V3 wire and the clips on the sensor's two pins (see docs/wiring/flex_sensor_wiring.png).`
+        ? `${r.name} reads about 0: the pin sees 0 V, so the flex sensor is not connected to 3V3. Check the 3V3 wire and the clips on the sensor's two pins (see docs/old/wiring/flex_sensor_wiring.png in the repo).`
         : `${r.name} reads about 4095: the pin sees the full 3.3 V. Check the 47k resistor to GND (it may be missing or loose).`, 'warn');
     } else if (!silent && !railReading(now) && S.lastGoodAt > S.connectedAt && S.linkNote !== 'live') {
       S.linkNote = 'live';
