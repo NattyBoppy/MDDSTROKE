@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8"><title>Breadboard Wiring</title>
 <!-- Source of wiring/breadboard_wiring.png. Edit here, then re-make the PNG. -->
 <style>body{margin:0;background:#111614}</style></head><body>
-<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1080" viewBox="0 0 1700 1080" font-family="DejaVu Sans, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1160" viewBox="0 0 1700 1160" font-family="DejaVu Sans, Arial, sans-serif">
   <defs>
     <style>
       .box{fill:#1b2220;stroke:#46524f;stroke-width:2}
@@ -13,9 +13,9 @@
       .lbl{fill:#b9c6c2;font-size:15px}
     </style>
   </defs>
-  <rect width="1700" height="1080" fill="#111614"/>
-  <text x="60" y="58" font-size="32" font-weight="700" fill="#eef4f2">Breadboard wiring · Uno R3 + analog EMG sensor + MG996R (29 Oct)</text>
-  <text x="60" y="90" font-size="18" fill="#b9c6c2">Sketch: arduino_ide_code/working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct</text>
+  <rect width="1700" height="1160" fill="#111614"/>
+  <text x="60" y="58" font-size="32" font-weight="700" fill="#eef4f2">Breadboard wiring · Uno R3 + EMG sensor + MG996R + E-stop</text>
+  <text x="60" y="90" font-size="18" fill="#b9c6c2">Sketches: 29 Oct working code (no E-stop) · uno_emg_mg996r_estop_1nov (with E-stop on D2, not tested yet)</text>
 
   <!-- ===== batteries ===== -->
   <rect x="70" y="140" width="240" height="120" rx="14" class="box" stroke="#f08a4b"/>
@@ -41,6 +41,7 @@
   <text x="1250" y="125" class="t" text-anchor="middle">Arduino Uno R3</text>
   <text x="1100" y="256" class="pin">A0</text>
   <text x="1100" y="406" class="pin">GND</text>
+  <text x="1105" y="540" class="pin" text-anchor="middle">D2</text>
   <text x="1160" y="540" class="pin" text-anchor="middle">D9</text>
   <text x="1250" y="540" class="pin" text-anchor="middle">5V</text>
   <text x="1340" y="540" class="pin" text-anchor="middle">GND</text>
@@ -53,17 +54,17 @@
   <text x="1585" y="240" class="s" text-anchor="middle">charger unplugged</text>
 
   <!-- ===== servo ===== -->
-  <rect x="1110" y="720" width="280" height="110" rx="14" class="box" stroke="#7d8a90"/>
-  <text x="1250" y="770" class="t" text-anchor="middle">MG996R servo</text>
-  <text x="1250" y="800" class="s" text-anchor="middle">orange/yellow · red · brown</text>
+  <rect x="1110" y="800" width="280" height="110" rx="14" class="box" stroke="#7d8a90"/>
+  <text x="1250" y="850" class="t" text-anchor="middle">MG996R servo</text>
+  <text x="1250" y="880" class="s" text-anchor="middle">orange/yellow · red · brown</text>
 
   <!-- ===== hand holder ===== -->
-  <rect x="1440" y="700" width="230" height="150" rx="14" class="box" stroke="#7d8a90" stroke-dasharray="6 5"/>
-  <text x="1460" y="736" class="t" font-size="20">Hand holder</text>
-  <text x="1460" y="764" class="s">3 gears → spool</text>
-  <text x="1460" y="788" class="s">→ nylon line</text>
-  <text x="1460" y="812" class="s">→ 4 fingers open</text>
-  <path d="M1390 775 H1440" stroke="#7d8a90" stroke-width="4" stroke-dasharray="3 6"/>
+  <rect x="1440" y="780" width="230" height="150" rx="14" class="box" stroke="#7d8a90" stroke-dasharray="6 5"/>
+  <text x="1460" y="816" class="t" font-size="20">Hand holder</text>
+  <text x="1460" y="844" class="s">3 gears → spool</text>
+  <text x="1460" y="868" class="s">→ nylon line</text>
+  <text x="1460" y="892" class="s">→ 4 fingers open</text>
+  <path d="M1390 855 H1440" stroke="#7d8a90" stroke-width="4" stroke-dasharray="3 6"/>
 
   <!-- ===== forearm + electrodes ===== -->
   <rect x="70" y="760" width="520" height="150" rx="75" fill="#3a2a22" stroke="#8a6a55" stroke-width="2"/>
@@ -92,9 +93,27 @@
   <!-- SIG to A0 (purple) -->
   <path d="M890 250 H1080" class="w" stroke="#a78bfa"/>
   <!-- servo wires -->
-  <path d="M1160 560 V720" class="w" stroke="#f5b82e"/>
-  <path d="M1250 560 V720" class="w" stroke="#e5484d"/>
-  <path d="M1340 560 V720" class="w" stroke="#8b5a3c"/>
+  <path d="M1160 560 V689 A11 11 0 0 0 1160 711 V800" class="w" stroke="#f5b82e"/>
+  <path d="M1250 560 V598 M1250 652 V800" class="w" stroke="#e5484d"/>
+  <path d="M1340 560 V800" class="w" stroke="#8b5a3c"/>
+  <!-- EMERGENCY STOP: latching button with a normally-closed (NC) contact, in the servo's +5 V wire -->
+  <rect x="1234" y="598" width="32" height="54" rx="6" fill="#5a1414" stroke="#ef4444" stroke-width="2"/>
+  <path d="M1242 625 H1258" stroke="#ffd6d6" stroke-width="3"/>
+  <path d="M1216 625 H1234" stroke="#ef4444" stroke-width="5"/>
+  <circle cx="1200" cy="625" r="17" fill="#ef4444" stroke="#ffd6d6" stroke-width="2"/>
+  <text x="1352" y="612" class="pin" fill="#ff8a8a">E-STOP</text>
+  <text x="1352" y="634" class="lbl">latching, NC contact</text>
+  <text x="1352" y="654" class="lbl">in the servo's +5 V</text>
+  <!-- D2 senses whether the servo has power: HIGH = running, LOW = E-stop pressed -->
+  <path d="M1250 700 H1105 V560" class="w" stroke="#34d399"/>
+  <circle cx="1250" cy="700" r="7" fill="#e5484d"/>
+  <text x="1176" y="690" class="lbl" fill="#8ff0c4">D2 sense</text>
+  <!-- 10k pull-down from D2 to ground -->
+  <path d="M1105 640 H1090" class="w" stroke="#34d399"/>
+  <rect x="1040" y="632" width="50" height="16" rx="4" fill="#e9d3a6" stroke="#9c7a3c"/>
+  <text x="1048" y="624" class="lbl" fill="#e9d3a6">10k</text>
+  <path d="M1040 640 H1022 V662 M1008 662 H1036 M1013 669 H1031 M1018 676 H1026" stroke="#9aa6a3" stroke-width="3" fill="none"/>
+  <text x="1006" y="696" class="lbl">GND</text>
   <!-- USB (orange power + data) -->
   <path d="M1420 200 H1500" class="w" stroke="#f08a4b" stroke-width="7"/>
 
@@ -103,24 +122,26 @@
   <text x="440" y="455" class="lbl">blue</text>
   <text x="940" y="240" class="lbl">purple: SIG → A0</text>
   <text x="760" y="606" class="lbl">grey: shared ground</text>
-  <text x="1170" y="650" class="lbl">signal</text>
-  <text x="1260" y="680" class="lbl">+5 V</text>
-  <text x="1350" y="650" class="lbl">GND</text>
+  <text x="1170" y="770" class="lbl">signal</text>
+  <text x="1260" y="770" class="lbl">+5 V</text>
+  <text x="1350" y="770" class="lbl">GND</text>
   <text x="1424" y="186" class="lbl">USB</text>
 
   <!-- ===== notes ===== -->
-  <rect x="625" y="700" width="465" height="360" rx="14" fill="#171d1b" stroke="#2c3734"/>
-  <text x="645" y="736" class="t" font-size="20">How the power flows</text>
-  <text x="645" y="768" class="s" fill="#f2b38d">• 2 × 9 V → EMG sensor ONLY</text>
-  <text x="645" y="792" class="s">   (B1 + → +Vs, B1 − &amp; B2 + → GND, B2 − → −Vs)</text>
-  <text x="645" y="822" class="s" fill="#f2b38d">• Laptop USB → Uno → servo (Uno 5V pin)</text>
-  <text x="645" y="852" class="s">• Grey = one shared ground for everything</text>
-  <text x="645" y="890" class="t" font-size="18" fill="#ff8a8a">⚠ Check</text>
-  <text x="645" y="918" class="s" fill="#f1d0d0">• Servo can pull ~2.5 A, USB gives ~0.5 A.</text>
-  <text x="645" y="940" class="s" fill="#f1d0d0">  Resets or twitching → own 5–6 V supply,</text>
-  <text x="645" y="962" class="s" fill="#f1d0d0">  grounds joined.</text>
-  <text x="645" y="990" class="s" fill="#f1d0d0">• A0 max 5 V: measure SIG at full effort.</text>
-  <text x="645" y="1018" class="s" fill="#f1d0d0">• Clip the 9 V batteries on LAST, off FIRST.</text>
-  <text x="645" y="1044" class="s" fill="#f1d0d0">• Reference snap = beeps with plug base metal.</text>
+  <rect x="625" y="720" width="465" height="420" rx="14" fill="#171d1b" stroke="#2c3734"/>
+  <text x="645" y="756" class="t" font-size="20">How the power flows</text>
+  <text x="645" y="788" class="s" fill="#f2b38d">• 2 × 9 V → EMG sensor ONLY</text>
+  <text x="645" y="812" class="s">   (B1 + → +Vs, B1 − &amp; B2 + → GND, B2 − → −Vs)</text>
+  <text x="645" y="842" class="s" fill="#f2b38d">• Laptop USB → Uno 5V → E-STOP → servo</text>
+  <text x="645" y="872" class="s">• Grey = one shared ground for everything</text>
+  <text x="645" y="900" class="s" fill="#ff8a8a">• E-STOP pressed → servo power cut at once;</text>
+  <text x="645" y="922" class="s" fill="#ff8a8a">  D2 goes LOW so the code stays stopped</text>
+  <text x="645" y="960" class="t" font-size="18" fill="#ff8a8a">⚠ Check</text>
+  <text x="645" y="988" class="s" fill="#f1d0d0">• Servo can pull ~2.5 A, USB gives ~0.5 A.</text>
+  <text x="645" y="1010" class="s" fill="#f1d0d0">  Resets or twitching → own 5–6 V supply,</text>
+  <text x="645" y="1032" class="s" fill="#f1d0d0">  grounds joined.</text>
+  <text x="645" y="1060" class="s" fill="#f1d0d0">• A0 max 5 V: measure SIG at full effort.</text>
+  <text x="645" y="1088" class="s" fill="#f1d0d0">• Clip the 9 V batteries on LAST, off FIRST.</text>
+  <text x="645" y="1114" class="s" fill="#f1d0d0">• Reference snap = beeps with plug base metal.</text>
 </svg>
 </body></html>

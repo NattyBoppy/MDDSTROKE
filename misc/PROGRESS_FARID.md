@@ -30,6 +30,14 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
+## 1 Nov 2026 (part 2): E-stop design, website serial plotter, misc/ folder
+- Moved `firmware/`, `hardware/`, `docs/` and `CLAUDE.md` into `misc/` (a tiny top-level `CLAUDE.md` loads `misc/CLAUDE.md`).
+- Added `design/29oct_back_of_palm_device_holder.3mf` (Base hand 2, Servo Holder, Servo Gear, Idler Gear, spool, Spool Clip) + plate picture.
+- **Emergency stop designed:** latching NC button in the servo +5 V wire, D2 sense with 10k to GND. Wiring + parts list in `wiring/`, both pictures updated. New sketch `arduino_ide_code/uno_emg_mg996r_estop_1nov` (syntax-checked only, not tested on hardware).
+- **Website: Serial plotter + monitor** (like the Arduino IDE) and a USB speed setting, so the Uno's EMG (9600 baud) shows live in Chrome.
+- Tests: protocol 9/9, browser 50/50, no broken links.
+- README "Planned next": ESP32 as wireless link (BLE easy, Wi-Fi needs a plan), EMG min/max thresholds, build the E-stop, wireless plotter.
+
 ## 1 Nov 2026: 29 Oct setup documented, new folders (branch `1st-november`)
 - **Working setup (29 Oct):** analog EMG sensor (2 × 9 V) → Arduino Uno R3 (A0) → D9 → MG996R in the hand holder → 3-gear train + spool → nylon line → 4 finger casings (no thumb). Laptop USB powers the Uno and the servo.
 - New folders: `wiring/` (system overview + breadboard wiring PNGs), `arduino_ide_code/` (29 Oct working code, unchanged), `biomechanics_calculation/` (PDF), `design/` (prototype photo, `3d_printed/` index + middle hinged full-ring v3 STLs, design pages), `website/` (site + screenshots + build prompt).

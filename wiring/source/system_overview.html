@@ -33,7 +33,7 @@
   <rect x="820" y="830" width="740" height="430" rx="20" class="panel"/>
 
   <!-- title -->
-  <text x="60" y="58" font-size="32" font-weight="700" fill="#eef4f2">How the hand exoskeleton works (29 Oct setup)</text>
+  <text x="60" y="58" font-size="32" font-weight="700" fill="#eef4f2">How the hand exoskeleton works (29 Oct setup + emergency stop)</text>
   <text x="60" y="90" font-size="18" fill="#b9c6c2">Forearm muscle → EMG sensor → Arduino Uno → MG996R → gears + spool → fishing line → 4 fingers open</text>
 
   <!-- ================= 1 · SENSE ================= -->
@@ -86,10 +86,10 @@
   <rect x="110" y="526" width="600" height="98" rx="14" class="logic"/>
   <text x="130" y="562" class="t">Threshold logic (toggle)</text>
   <text x="130" y="588" class="s">hit ≥ 400 → open (or close, if open ≥ 1 s)</text>
-  <text x="130" y="610" class="s">relax below 250 before the next hit counts</text>
+  <text x="130" y="610" class="s">relax below 250 before the next hit counts · E-stop (D2) = stop</text>
 
   <path d="M410 640 V684" class="sig" marker-end="url(#aG)"/>
-  <text x="422" y="668" class="lbl">D9 · servo signal</text>
+  <text x="422" y="668" class="lbl">D9 signal</text>
 
   <!-- move chain -->
   <rect x="70" y="690" width="420" height="88" rx="14" class="mech"/>
@@ -124,16 +124,24 @@
   <text x="538" y="1138" class="s">   resting tone)</text>
   <path d="M520 1110 H498" class="sig" marker-end="url(#aG)"/>
 
-  <!-- laptop power into Uno + servo -->
-  <rect x="520" y="690" width="230" height="200" rx="14" class="power"/>
-  <text x="538" y="724" class="t">Laptop USB</text>
-  <text x="538" y="750" class="s">5 V, on battery</text>
-  <text x="538" y="772" class="s">(charger unplugged)</text>
-  <text x="538" y="806" class="s">powers the Uno,</text>
-  <text x="538" y="828" class="s">and the servo via</text>
-  <text x="538" y="850" class="s">the Uno’s 5V pin</text>
-  <path d="M635 690 V648" class="pw" marker-end="url(#aO)"/>
-  <path d="M520 734 H498" class="pw" marker-end="url(#aO)"/>
+  <!-- emergency stop: in the servo's power wire, and read by the Uno on D2 -->
+  <rect x="520" y="682" width="200" height="112" rx="14" fill="#5a1414" stroke="#ef4444" stroke-width="3"/>
+  <circle cx="548" cy="712" r="13" fill="#ef4444"/>
+  <text x="570" y="719" class="t" font-size="19" fill="#ffd6d6">E-STOP</text>
+  <text x="536" y="746" class="s" fill="#f6caca">red latching button</text>
+  <text x="536" y="768" class="s" fill="#f6caca">cuts servo power</text>
+  <text x="536" y="788" class="s" fill="#f6caca" font-size="14">+ tells the Uno (D2)</text>
+  <path d="M520 738 H498" class="pw" marker-end="url(#aO)"/>
+  <path d="M560 682 V648" class="sig" marker-end="url(#aG)"/>
+  <text x="576" y="672" class="lbl">D2</text>
+
+  <!-- laptop power into the Uno, and through the E-stop to the servo -->
+  <rect x="520" y="824" width="230" height="92" rx="14" class="power"/>
+  <text x="538" y="854" class="t" font-size="19">Laptop USB 5 V</text>
+  <text x="538" y="880" class="s">on battery, charger off</text>
+  <text x="538" y="902" class="s" font-size="14">→ Uno → E-stop → servo</text>
+  <path d="M620 824 V800" class="pw" marker-end="url(#aO)"/>
+  <path d="M740 824 V648" class="pw" marker-end="url(#aO)"/>
 
   </g>
 
@@ -168,7 +176,7 @@
   <rect x="1200" y="842" width="330" height="120" rx="14" class="power"/>
   <text x="1218" y="876" class="t" font-size="19">B · Laptop USB 5 V</text>
   <text x="1218" y="904" class="s">→ Arduino Uno</text>
-  <text x="1218" y="928" class="s">→ MG996R (via Uno 5V pin)</text>
+  <text x="1218" y="928" class="s">→ E-stop → MG996R</text>
 
   <text x="850" y="1000" class="s" fill="#d6dfdc">Grounds are joined (EMG GND ↔ Uno GND) so the Uno can read SIG.</text>
 

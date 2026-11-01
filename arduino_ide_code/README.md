@@ -3,6 +3,7 @@
 | Sketch | Date | What it is |
 |---|---|---|
 | [`working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct`](working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct/) | 29 Oct 2026 | **Working code.** Arduino Uno R3 + 2 × 9 V + analog EMG sensor + hand holder + MG996R |
+| [`uno_emg_mg996r_estop_1nov`](uno_emg_mg996r_estop_1nov/) | 1 Nov 2026 | the 29 Oct code **+ emergency stop** on D2. **Not tested on hardware yet.** It needs the E-stop wiring: without the 10k resistor on D2, the pin floats and the sketch may stop by itself. |
 
 *(Folder and file names use underscores, not spaces or `+`, because the Arduino IDE refuses sketch names with those. The folder and the `.ino` file must have the same name.)*
 
@@ -19,6 +20,10 @@ Wiring for this sketch: [`../wiring/breadboard_wiring.png`](../wiring/breadboard
 4. After a hit, the muscle must **relax below 250** before the next hit counts. So holding the muscle tight doesn't make the hand flap open and shut.
 5. 0.5 s after each move, the servo signal is switched off (`detach`), so the servo stops buzzing and jittering.
 6. Sends the smoothed value to the **Serial Plotter** (Tools → Serial Plotter, **9600 baud**). Use it to see your 400 / 250 lines.
+
+### Watch it live in the browser
+Instead of the Arduino IDE's Serial Plotter, you can use the website's **Serial plotter**: set **USB speed** to **9600**, then click **Connect by USB**. See [`../website/README.md`](../website/README.md).
+(The website's STOP button can't stop this sketch, because it doesn't listen for commands. Use the hardware E-stop.)
 
 ### How to upload
 1. Open the `.ino` file in the Arduino IDE.

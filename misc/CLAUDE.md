@@ -8,7 +8,9 @@ One motor pulls a nylon fishing line that runs along the back of the fingers and
   - The Uno is powered by the laptop USB, and the servo by the Uno's 5V pin.
   - Spool winds (clockwise) → line taut → fingers straighten. Spool unwinds → slack → the fingers return to a fist by themselves (resting tone).
 - **Not in use yet:** flex sensors, ESP32-S3, balance bar/whiffletree, coil sheaths, table-top unit. Older firmware/hardware for these stays in `misc/firmware/` and `misc/hardware/`.
-- **Planned:** ESP32-S3 reads the EMG (through the 1/3 divider) and sends it by Bluetooth to the website.
+- **Emergency stop (designed 1 Nov, not built):** latching NC button in the servo's +5 V wire (hardware power cut) + D2 sense with 10k to GND. Sketch `arduino_ide_code/uno_emg_mg996r_estop_1nov` (untested). The 29 Oct code ignores serial input, so the website STOP can't stop it.
+- **Website serial plotter:** the website plots any numeric serial lines (Arduino-plotter style) at a chosen baud (9600 for the Uno code).
+- **Planned (to discuss):** ESP32-S3 used only as the Bluetooth / Wi-Fi link to the website; per-person EMG min/max thresholds instead of the fixed 400/250 toggle.
 - Code: `arduino_ide_code/working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct/`. Wiring: `wiring/`.
 - Milestones: POC1 Thu 22 Oct 2026, POC2 29 Oct, CA2 demo 5 Nov 2026 (graded on need-statement fit, casing/materials, electronics, AI-powered app).
 - Later phases add a display on the table unit, plus machine learning that compares the flexor and extensor EMG to decide open or close.
