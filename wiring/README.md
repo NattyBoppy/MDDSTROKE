@@ -21,4 +21,4 @@ The ESP32-S3 and the website are planned and drawn dashed; they're not wired yet
 The pictures are made from the files in [`source/`](source/). Open one in Chrome to see it, and edit the text in it with any text editor.
 To make a new PNG, take a screenshot of it, or ask Claude Code to re-render it.
 
-Older wiring diagrams (ESP32 flex sensor, first EMG tests) are in [`../docs/old/wiring/`](../docs/old/wiring/).
+Older wiring diagrams (ESP32 flex sensor, first EMG tests) are in [`../misc/docs/old/wiring/`](../misc/docs/old/wiring/).

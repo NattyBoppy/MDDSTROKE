@@ -13,6 +13,6 @@ The **live hand tracker**: a realistic 3D hand that copies the real fingers, wit
 | [`v2_build_prompt.md`](v2_build_prompt.md) | the original instructions the website was built from |
 
 **Not connected to the current Uno setup yet.** The website reads data from the **ESP32-S3** over USB or Bluetooth, and the 29 Oct setup uses an Arduino Uno with no ESP32.
-For now, use it in **Demo** mode, or connect an ESP32 running `firmware/flex/flex_devkit_test`.
+For now, use it in **Demo** mode, or connect an ESP32 running `misc/firmware/flex/flex_devkit_test`.
 
 GitHub publishes this folder automatically every time something changes in it on `main` (see `.github/workflows/pages.yml`).

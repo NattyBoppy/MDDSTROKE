@@ -14,8 +14,8 @@ It works over **USB** or **Bluetooth**, and has a **Demo** mode that needs no ha
 
 ### 1. Flash the firmware (once)
 1. Open the Arduino IDE.
-2. Open **`firmware/flex/multi_flex_devkit/multi_flex_devkit.ino`** (5 fingers, USB + Bluetooth).
-   *Only one sensor on GPIO 4? `firmware/flex/flex_devkit_test` also works (it sends the older `D,` lines).*
+2. Open **`misc/firmware/flex/multi_flex_devkit/multi_flex_devkit.ino`** (5 fingers, USB + Bluetooth).
+   *Only one sensor on GPIO 4? `misc/firmware/flex/flex_devkit_test` also works (it sends the older `D,` lines).*
 3. In `multi_flex_devkit`, find the box `WHICH SENSORS ARE CONNECTED?` and set `true` for each finger that has a sensor.
    The order is thumb, index, middle, ring, little. Start with only the index: `{ false, true, false, false, false }`.
 4. **Tools** menu:
@@ -27,7 +27,7 @@ It works over **USB** or **Bluetooth**, and has a **Demo** mode that needs no ha
 6. Pick the port under **Tools → Port**, then press the **→ Upload** arrow.
 
 Wiring for each sensor (3.3 V only, **never 5 V**): `3V3 → flex sensor → GPIO pin → 47k resistor → GND`.
-Picture: [docs/old/wiring/flex_sensor_wiring.png](../../docs/old/wiring/flex_sensor_wiring.png)
+Picture: [misc/docs/old/wiring/flex_sensor_wiring.png](../../misc/docs/old/wiring/flex_sensor_wiring.png)
 Pins: index **4**, middle **6**, ring **7**, little **8**, thumb **9**.
 
 ### 2. Close the Arduino Serial Monitor

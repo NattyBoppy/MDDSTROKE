@@ -17,4 +17,4 @@
 | [`finger_clamps.html`](finger_clamps.html) | interactive 3D page of the earlier TPU C-clamp design (v8). Download it, then double-click it to open in Chrome |
 | [`hand_unit_layout.html`](hand_unit_layout.html) | interactive comparison of motor layouts (made when 2 motors were planned) |
 
-Older printed parts (spools, knuckle set, C-clamps v8) are in [`../hardware/`](../hardware/), grouped by date.
+Older printed parts (spools, knuckle set, C-clamps v8) are in [`../misc/hardware/`](../misc/hardware/), grouped by date.

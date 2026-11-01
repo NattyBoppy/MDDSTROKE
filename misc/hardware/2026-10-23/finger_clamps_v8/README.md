@@ -5,7 +5,7 @@ The tip of the finger is left open.
 
 ![v8 clamps on the print bed](../../../docs/previews/finger_clamps/print_plate_v8.png)
 
-Interactive 3D preview, strap demo and assembly steps: open [`design/finger_clamps.html`](../../../design/finger_clamps.html) in Chrome (download the file, then double-click it).
+Interactive 3D preview, strap demo and assembly steps: open [`design/finger_clamps.html`](../../../../design/finger_clamps.html) in Chrome (download the file, then double-click it).
 
 ## What each clamp has
 | Feature | Size | What it's for |

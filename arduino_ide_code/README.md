@@ -42,4 +42,4 @@ Wiring for this sketch: [`../wiring/breadboard_wiring.png`](../wiring/breadboard
    - Have someone ready to pull the USB cable.
    - Once you know the "just straight" angle, use that number instead of 180.
 
-Also: during EMG tests, unplug the laptop **charger** (run on battery) and keep the EMG board on its two 9 V batteries only. See [`../docs/SAFETY.md`](../docs/SAFETY.md).
+Also: during EMG tests, unplug the laptop **charger** (run on battery) and keep the EMG board on its two 9 V batteries only. See [`../misc/docs/SAFETY.md`](../misc/docs/SAFETY.md).

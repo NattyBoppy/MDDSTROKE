@@ -1,7 +1,7 @@
 /*
   protocol.js: understands the text lines the device sends.
   ----------------------------------------------------------
-  The device sends one line of text every 20-50 ms (see CLAUDE.md):
+  The device sends one line of text every 20-50 ms (see misc/CLAUDE.md):
 
     D,<flex_raw>,<servo_deg>,<state>              v1 format, one finger (= index)
     F,<thumb>,<index>,<middle>,<ring>,<little>    raw flex 0..4095, -1 = no sensor fitted

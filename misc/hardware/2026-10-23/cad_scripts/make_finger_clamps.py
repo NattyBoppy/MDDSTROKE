@@ -16,7 +16,7 @@ Z=0 face: no supports needed.
 All sizes in millimetres. Edit FINGERS below to resize.
 
 How to run (needs: pip install trimesh manifold3d numpy):
-    python hardware/2026-10-23/cad_scripts/make_finger_clamps.py
+    python misc/hardware/2026-10-23/cad_scripts/make_finger_clamps.py
 If you change the shape, bump VERSION so the file names change too.
 """
 import json, math, os
