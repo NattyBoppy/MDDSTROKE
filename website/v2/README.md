@@ -6,7 +6,7 @@ It works over **USB** or **Bluetooth**, and has a **Demo** mode that needs no ha
 - Online (after GitHub Pages is switched on, see below): **https://nattyboppy.github.io/MDDSTROKE/v2/**
 - The link only works while the GitHub repo is **Public** (free GitHub accounts can't publish Pages from a private repo).
 
-![v2 on a laptop](../../docs/screenshots/v2_desktop.png)
+![v2 on a laptop](../screenshots/v2_desktop.png)
 
 ---
 

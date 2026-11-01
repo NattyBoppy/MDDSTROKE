@@ -1,72 +1,46 @@
 # MDDSTROKE: finger-extension exoskeleton for stroke patients
 
-An NTU group project. One motor pulls a braided line along the back of the fingers to open a hand stuck in a fist.
-- **EMG** on the forearm detects the intent to open.
-- A **flex sensor** stops the motor when the finger is straight.
-- A **website** shows a live 3D hand.
+An NTU group project for stroke patients whose hand rests in a **clenched fist**.
+When the patient **tries** to open the hand, a sensor on the forearm picks up the muscle signal, and a motor pulls the four fingers straight.
 
-| Start here | |
-|---|---|
-| 🌐 Live hand tracker website | https://nattyboppy.github.io/MDDSTROKE/v2/ (works while the repo is **Public**) · how to use: [website/v2/README.md](website/v2/README.md) |
-| ⚠️ Before testing on anyone | [docs/SAFETY.md](docs/SAFETY.md) |
-| 🔌 Arduino / ESP32 code | [firmware/](firmware) |
-| 🖨️ 3D-printable parts (by date) | [hardware/](hardware) · **latest finger clamps: [hardware/2026-10-23/finger_clamps_v8](hardware/2026-10-23/finger_clamps_v8)** |
-| 🧩 Interactive design pages (3D, open in Chrome) | [docs/design/finger_clamps.html](docs/design/finger_clamps.html) · [docs/design/hand_unit_layout.html](docs/design/hand_unit_layout.html) |
-| 📋 Work log (what was done / what's next) | [misc/PROGRESS_FARID.md](misc/PROGRESS_FARID.md) |
-| 🗄️ Old wiring, concepts, notes | [docs/old/](docs/old) |
+![hand holder prototype](design/hand_holder_prototype_29oct.png)
 
-## How the system fits together
-**One motor, four fingers, no thumb (for now).**
+## How it works (29 Oct setup)
+1. The patient tenses the **forearm muscles** (flexor / extensor).
+2. **Electrodes** on the skin pass the signal to an **analog EMG sensor**, powered by **two 9 V batteries**.
+3. An **Arduino Uno R3** reads the signal, smooths it, and checks it against a threshold.
+4. On a "hit", the Uno turns the **MG996R servo**, which is screwed into the **hand holder**.
+5. Through a **3-gear train** (small → middle → big gear), the big gear's **spool** winds in a **nylon fishing line**.
+6. The line goes taut and pulls the **index, middle, ring and little finger** straight, all at once. No thumb for now.
+7. On the next hit the servo returns, the spool unwinds, the line goes slack, and the fingers curl back into a fist by themselves.
 
-```mermaid
-flowchart LR
-    EMG["EMG sensor<br/>(forearm)"] -->|"patient tries to open"| ESP["ESP32-S3<br/>(the brain)"]
-    FLEX["Flex sensor<br/>(back of the finger)"] -->|"how bent"| ESP
-    ESP -->|"turn"| MOTOR["1 motor (MG996R)<br/>in the table-top unit"]
-    MOTOR -->|"line in a coil sheath"| BAR["Balance bar<br/>(whiffletree)"]
-    BAR --> F1["Index"]
-    BAR --> F2["Middle"]
-    BAR --> F3["Ring"]
-    BAR --> F4["Little"]
-    ESP <-->|"USB or Bluetooth"| WEB["Website<br/>live 3D hand + STOP"]
-```
+![system overview](wiring/system_overview.png)
 
-1. The patient **tries** to open the hand. The **EMG** sensor on the forearm picks this up.
-2. The **ESP32** turns the **motor**, which reels in the line.
-3. The line runs inside a coil sheath to the hand, where a **balance bar** shares the pull between the **4 fingers**.
-4. When the **flex sensor** says the finger is straight, the ESP32 **stops** the motor.
-5. The **website** shows the hand live, and its big **STOP** button always works.
+**Power:** the 2 × 9 V batteries power **only** the EMG sensor. The **laptop** (USB) powers the Uno, and the Uno powers the servo.
 
 ## Folders
 | Folder | What is in it |
 |---|---|
-| `website/v2/` | the live hand tracker website |
-| `firmware/` | Arduino / ESP32 sketches: `flex/`, `emg/`, `motors/` |
-| `hardware/<date>/` | 3D parts and the scripts that make them, grouped by the date they were added. Put new parts in a new date folder (`YYYY-MM-DD`). |
-| `docs/` | `SAFETY.md`, design pages, previews, screenshots, and `old/` |
-| `misc/` | the work log |
-| `CLAUDE.md` | instructions that Claude Code reads automatically. It has to stay in the top folder. |
+| [`wiring/`](wiring/) | system overview + breadboard wiring pictures (and their editable source) |
+| [`arduino_ide_code/`](arduino_ide_code/) | the Arduino sketches. **Working code: 29 Oct, Uno + EMG + MG996R** |
+| [`biomechanics_calculation/`](biomechanics_calculation/) | the finger force / spool / torque calculation (PDF) |
+| [`design/`](design/) | the prototype photo, `3d_printed/` STL files, interactive design pages |
+| [`website/`](website/) | the live 3D hand tracker website (demo mode for now) |
+| [`firmware/`](firmware/) | earlier ESP32 / Nano / XIAO sketches (flex sensor, EMG tests, motor tests) |
+| [`hardware/`](hardware/) | earlier printed parts, grouped by date |
+| [`docs/`](docs/) | [`SAFETY.md`](docs/SAFETY.md) (read before testing on anyone), previews, and `old/` |
+| [`misc/`](misc/) | the work log ([`PROGRESS_FARID.md`](misc/PROGRESS_FARID.md)) |
+| `CLAUDE.md` | instructions that Claude Code reads automatically. It has to stay in this top folder. |
 
-## Finger interface: TPU C-clamps v8
-Three soft TPU clamps per finger (base, middle and tip segment). Each wraps about 70 % of the finger with the gap on the palm side, and is 3 mm bigger than the finger for a 1.5 mm foam liner.
-- A **flat elastic strap** presses onto a stud on each clamp, like a watch strap, so the clamps stay linked and never dangle. No tools to put it on or take it off.
-- The fishing line runs as a **U-loop**: up one side of the finger, round a small pulley nose on the tip clamp, back down the other side. It pulls the finger straight without twisting, and there's no knot at the fingertip.
-- Each clamp has a **slot for the flex sensor**, just above the finger.
+## ⚠️ Before testing on a person
+- Read [`docs/SAFETY.md`](docs/SAFETY.md).
+- Laptop **charger unplugged** during EMG tests.
+- First run the servo **without a hand** in the holder, and have someone ready to pull the USB cable.
+- The servo currently runs on USB power through the Uno. If the Uno resets or the servo twitches, give the servo its own 5–6 V supply (grounds joined). Details in [`arduino_ide_code/README.md`](arduino_ide_code/README.md).
 
-| On the hand | Strap demo |
-|---|---|
-| ![clamps on the hand](docs/previews/finger_clamps/clamps_on_hand_v8.png) | ![strap demo](docs/previews/finger_clamps/strap_demo.png) |
-
-Files, sizes, print settings and assembly: [hardware/2026-10-23/finger_clamps_v8/README.md](hardware/2026-10-23/finger_clamps_v8/README.md).
-
-## Where the motor goes
-The motor sits in a **table-top unit** (layout B in [docs/design/hand_unit_layout.html](docs/design/hand_unit_layout.html)). Only about 30–40 g ends up on the hand. The line reaches the hand in a coil sheath, which loses about 20–40 % of the pull.
-
-![table-top unit](docs/previews/finger_clamps/layout_B_table_unit.png)
-
-*(This picture was drawn when a second motor for the thumb was planned. For now there is only the one 4-finger motor.)*
-
-**Watch out:** the MG996R datasheet gives only about 120° of rotation. To reel in about 47 mm of line (estimated, fist to straight), the spool needs a radius of about 22 mm. That leaves only about 6 N per finger in steady use when one servo pulls all 4 fingers. Measure the pull the test hand needs with a luggage scale before building the box.
+## Planned next
+- **ESP32-S3** reading the EMG signal and sending it by **Bluetooth** to the [website](website/), for live EMG and recording.
+- A sensor that tells the motor when the finger is straight, so it stops by itself.
 
 ## Team: how to edit
 - Small change: open the file on GitHub → pencil icon → edit → **Commit changes**.

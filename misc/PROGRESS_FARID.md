@@ -30,6 +30,12 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
+## 1 Nov 2026: 29 Oct setup documented, new folders (branch `1st-november`)
+- **Working setup (29 Oct):** analog EMG sensor (2 × 9 V) → Arduino Uno R3 (A0) → D9 → MG996R in the hand holder → 3-gear train + spool → nylon line → 4 finger casings (no thumb). Laptop USB powers the Uno and the servo.
+- New folders: `wiring/` (system overview + breadboard wiring PNGs), `arduino_ide_code/` (29 Oct working code, unchanged), `biomechanics_calculation/` (PDF), `design/` (prototype photo, `3d_printed/` index + middle hinged full-ring v3 STLs, design pages), `website/` (site + screenshots + build prompt).
+- README and CLAUDE.md rewritten for the current setup: no flex sensor, ESP32 or balance bar yet.
+- To check: servo on USB power (MG996R up to ~2.5 A vs ~0.5 A from USB); EMG SIG must stay under 5 V on A0; the code uses the full 0–180°.
+
 ## 1 Nov 2026: repo tidy-up (Claude Code)
 - Clean branch made from `main`, then reorganised:
   - `PROGRESS_FARID.md` → `misc/`; `SAFETY.md` → `docs/`.

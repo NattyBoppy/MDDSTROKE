@@ -257,7 +257,7 @@ for fname, parts in summary.items():
 
 # sizes of every part (used by the parts table in the README)
 json.dump(summary, open(os.path.join(OUT, "sizes.json"), "w"), indent=1)
-# mesh data for the 3D preview pages in docs/design (only when asked: python make_finger_clamps.py --viewer)
+# mesh data for the 3D preview pages in design/ (only when asked: python make_finger_clamps.py --viewer)
 import sys
 if "--viewer" in sys.argv:
     json.dump(viewer, open(os.path.join(OUT, "viewer_meshes.json"), "w"))

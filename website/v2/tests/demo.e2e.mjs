@@ -19,8 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const websiteDir = path.resolve(here, '../..');
-const repoDir = path.resolve(websiteDir, '..');
-const shotsDir = path.join(repoDir, 'docs', 'screenshots');
+const shotsDir = path.join(websiteDir, 'screenshots');
 
 // ---- find Playwright (local install or global) ----
 let chromium;

@@ -2,13 +2,14 @@
 
 ## What this project is
 NTU group project (MDD): a **cable-driven finger-extension exoskeleton for stroke patients whose hand is stuck in a clenched fist**.
-A motor pulls a braided fishing line that runs along the back of each finger and opens it to straight.
+One motor pulls a nylon fishing line that runs along the back of the fingers and opens them to straight.
 
-- **EMG** on the forearm detects the patient *trying* to open the hand → triggers the motor.
-- A **flex sensor** on the back of the finger measures the bend → acts as the **"finger is straight, stop" ceiling**.
-- A **website** shows a 3D hand that copies the real finger bend live (USB or Bluetooth).
-- Current plan: **one motor** opens the **4 fingers** through a balance bar (whiffletree). **No thumb for now.**
-  The motor sits in a **table-top unit**. The lines reach the hand inside a coil sheath (Bowden cable), like SNU's Exo-Glove.
+- **Current working setup (29 Oct):** analog EMG sensor (Muscle Sensor V3, powered ONLY by 2 × 9 V) → **Arduino Uno R3** (A0, smoothing + threshold toggle) → D9 → **MG996R** in a **hand holder** → 3-gear train (small → middle → big gear with spool) → **nylon fishing line** → **4 finger casings** (index, middle, ring, little; **no thumb**). One motor pulls all 4 fingers at once.
+  - The Uno is powered by the laptop USB, and the servo by the Uno's 5V pin.
+  - Spool winds (clockwise) → line taut → fingers straighten. Spool unwinds → slack → the fingers return to a fist by themselves (resting tone).
+- **Not in use yet:** flex sensors, ESP32-S3, balance bar/whiffletree, coil sheaths, table-top unit. Older firmware/hardware for these stays in `firmware/` and `hardware/`.
+- **Planned:** ESP32-S3 reads the EMG (through the 1/3 divider) and sends it by Bluetooth to the website.
+- Code: `arduino_ide_code/working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct/`. Wiring: `wiring/`.
 - Milestones: POC1 Thu 22 Oct 2026, POC2 29 Oct, CA2 demo 5 Nov 2026 (graded on need-statement fit, casing/materials, electronics, AI-powered app).
 - Later phases add a display on the table unit, plus machine learning that compares the flexor and extensor EMG to decide open or close.
 
@@ -31,22 +32,18 @@ The lead (Farid / KID) is a UI/UX designer and maker, **not a software engineer*
 
 ## Repo layout
 ```
-README.md            front page of the repo (keep it short and current)
+README.md            front page (keep it short and current)
 CLAUDE.md            this file. Must stay in the top folder: Claude Code only reads it from there
-website/v2/          the live hand tracker website (the only website; v1 was removed 1 Nov, it is still in git history)
-website/index.html   just forwards visitors to v2/
-firmware/flex/       flex sensor sketches (Nano, XIAO, DevKit)
-firmware/motors/     MG996R knob test, STS3215 (Feetech bus servo) knob test
-firmware/emg/        EMG sketches for the red analog EMG board (+VS/GND/-VS) and the DFRobot sensor
-hardware/<date>/     3D parts grouped by the date they were added (YYYY-MM-DD). New parts go in a new date folder.
-  2026-10-21/        spool_v4, hand_mount (back-of-hand MG90S), knuckle_anchor_set + their cad_scripts
-  2026-10-23/        finger_clamps_v8 (latest finger interface, see its README) + cad_scripts/make_finger_clamps.py
-                     cad_scripts need: pip install trimesh manifold3d numpy
+wiring/              system_overview.png + breadboard_wiring.png (current Uno setup); source/ = editable SVG pages
+arduino_ide_code/    Arduino sketches. Sketch folder name = .ino name, underscores only (Arduino IDE rule)
+biomechanics_calculation/  finger force / spool / torque calculation (PDF)
+design/              prototype photo, design pages (.html, open in Chrome), 3d_printed/ = current STLs
+website/             live hand tracker: v2/ (the site), index.html (forwards to v2), screenshots/, build prompt
+firmware/            earlier ESP32 / Nano / XIAO sketches: flex/, emg/, motors/
+hardware/<date>/     earlier printed parts grouped by the date they were added (YYYY-MM-DD)
 docs/SAFETY.md       safety checklist: read before every test on a person
-docs/design/         self-contained 3D design pages (finger clamps, motor layout A vs B). Open in Chrome
-docs/previews/       preview pictures of the parts
-docs/screenshots/    website screenshots
-docs/old/            out-of-date material kept for reference: wiring, concepts, prompts, website v1 handoff
+docs/previews/       preview pictures of earlier parts
+docs/old/            out-of-date material: old wiring, concepts, website v1 handoff
 misc/PROGRESS_FARID.md  running log of what was done / worked / failed / to-do. UPDATE IT after each work session.
 ```
 

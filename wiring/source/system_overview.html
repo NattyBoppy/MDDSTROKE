@@ -1,0 +1,191 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>System Overview</title>
+<!-- Source of wiring/system_overview.png. Edit the text here, then re-make the PNG
+     (open in Chrome and take a screenshot, or ask Claude to re-render it). -->
+<style>body{margin:0;background:#111614}</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1300" viewBox="0 0 1600 1300" font-family="DejaVu Sans, Arial, sans-serif">
+  <defs>
+    <marker id="aG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8c4c0"/></marker>
+    <marker id="aO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f08a4b"/></marker>
+    <marker id="aD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6f7a77"/></marker>
+    <style>
+      .t{fill:#eef4f2;font-size:21px;font-weight:700}
+      .s{fill:#b9c6c2;font-size:15px}
+      .lbl{fill:#b9c6c2;font-size:15px}
+      .h{fill:#eef4f2;font-size:19px;font-weight:700}
+      .sense{fill:#173f33;stroke:#3fae84;stroke-width:2}
+      .logic{fill:#2f2668;stroke:#7d6bea;stroke-width:2}
+      .mech{fill:#30363a;stroke:#7d8a90;stroke-width:2}
+      .power{fill:#4a2a18;stroke:#f08a4b;stroke-width:2}
+      .plan{fill:#1b2120;stroke:#6f7a77;stroke-width:2;stroke-dasharray:8 6}
+      .panel{fill:#171d1b;stroke:#2c3734;stroke-width:1.5}
+      .sig{stroke:#b8c4c0;stroke-width:3;fill:none}
+      .pw{stroke:#f08a4b;stroke-width:3.5;fill:none}
+      .pl{stroke:#6f7a77;stroke-width:3;fill:none;stroke-dasharray:9 7}
+    </style>
+  </defs>
+  <rect width="1600" height="1300" fill="#111614"/>
+  <!-- panels first, so lines and labels sit on top of them -->
+  <rect x="40" y="320" width="740" height="940" rx="20" class="panel"/>
+  <text x="64" y="358" class="h" fill="#a99cff">② DECIDE + ③ MOVE · working now</text>
+  <rect x="820" y="320" width="740" height="480" rx="20" class="panel"/>
+  <text x="844" y="358" class="h" fill="#8e9a96">Telemetry · planned, not wired yet</text>
+  <rect x="820" y="830" width="740" height="430" rx="20" class="panel"/>
+
+  <!-- title -->
+  <text x="60" y="58" font-size="32" font-weight="700" fill="#eef4f2">How the hand exoskeleton works (29 Oct setup)</text>
+  <text x="60" y="90" font-size="18" fill="#b9c6c2">Forearm muscle → EMG sensor → Arduino Uno → MG996R → gears + spool → fishing line → 4 fingers open</text>
+
+  <!-- ================= 1 · SENSE ================= -->
+  <text x="60" y="140" class="h" fill="#3fae84">① SENSE</text>
+  <rect x="60" y="155" width="300" height="96" rx="14" class="sense"/>
+  <text x="80" y="192" class="t">Forearm muscles</text>
+  <text x="80" y="218" class="s">flexor + extensor activity</text>
+  <text x="80" y="238" class="s">(the patient tries to open)</text>
+
+  <rect x="420" y="155" width="300" height="96" rx="14" class="sense"/>
+  <text x="440" y="192" class="t">Electrodes</text>
+  <text x="440" y="218" class="s">2 signal pads on the muscle</text>
+  <text x="440" y="238" class="s">1 reference pad on the elbow bone</text>
+
+  <rect x="780" y="155" width="330" height="96" rx="14" class="sense"/>
+  <text x="800" y="192" class="t">Analog EMG sensor</text>
+  <text x="800" y="218" class="s">Muscle Sensor V3</text>
+  <text x="800" y="238" class="s">SIG = muscle effort (analogue)</text>
+
+  <rect x="1180" y="155" width="360" height="96" rx="14" class="power"/>
+  <text x="1200" y="192" class="t">2 × 9 V batteries</text>
+  <text x="1200" y="218" class="s">power the EMG sensor ONLY</text>
+  <text x="1200" y="238" class="s">(+Vs, GND, −Vs = ±9 V)</text>
+
+  <path d="M360 203 H412" class="sig" marker-end="url(#aG)"/>
+  <path d="M720 203 H772" class="sig" marker-end="url(#aG)"/>
+  <path d="M1180 203 H1118" class="pw" marker-end="url(#aO)"/>
+
+  <!-- split from EMG SIG -->
+  <path d="M945 251 V290" class="sig"/>
+  <circle cx="945" cy="290" r="6" fill="#b8c4c0"/>
+  <path d="M945 290 H680 V402" class="sig" marker-end="url(#aG)"/>
+  <path d="M945 290 H1400 V426" class="pl" marker-end="url(#aD)"/>
+  <text x="560" y="394" class="lbl" fill="#e6ecea">SIG → A0</text>
+  <text x="1412" y="394" class="lbl">later</text>
+
+  <!-- ================= LEFT: working path ================= -->
+
+  <g transform="translate(0,50)">
+  <!-- Uno group -->
+  <rect x="70" y="360" width="680" height="280" rx="16" fill="none" stroke="#7d6bea" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <text x="90" y="392" class="t" fill="#cfc7ff">Arduino Uno R3</text>
+  <text x="330" y="392" class="s">code: arduino_ide_code/…29oct.ino</text>
+
+  <rect x="110" y="410" width="600" height="90" rx="14" class="logic"/>
+  <text x="130" y="446" class="t">Smoothing filter</text>
+  <text x="130" y="474" class="s">smoothed = 0.9 × old + 0.1 × new  (one spike can’t trigger it)</text>
+
+  <path d="M410 500 V522" class="sig" marker-end="url(#aG)"/>
+  <rect x="110" y="526" width="600" height="98" rx="14" class="logic"/>
+  <text x="130" y="562" class="t">Threshold logic (toggle)</text>
+  <text x="130" y="588" class="s">hit ≥ 400 → open (or close, if open ≥ 1 s)</text>
+  <text x="130" y="610" class="s">relax below 250 before the next hit counts</text>
+
+  <path d="M410 640 V684" class="sig" marker-end="url(#aG)"/>
+  <text x="422" y="668" class="lbl">D9 · servo signal</text>
+
+  <!-- move chain -->
+  <rect x="70" y="690" width="420" height="88" rx="14" class="mech"/>
+  <text x="90" y="726" class="t">MG996R servo</text>
+  <text x="90" y="754" class="s">0° = released · 180° = wound in</text>
+
+  <path d="M280 778 V806" class="sig" marker-end="url(#aG)"/>
+  <rect x="70" y="810" width="420" height="88" rx="14" class="mech"/>
+  <text x="90" y="846" class="t">3-gear train + spool</text>
+  <text x="90" y="874" class="s">small → middle → big gear (with spool)</text>
+
+  <path d="M280 898 V926" class="sig" marker-end="url(#aG)"/>
+  <rect x="70" y="930" width="420" height="88" rx="14" class="mech"/>
+  <text x="90" y="966" class="t">Nylon fishing line goes taut</text>
+  <text x="90" y="994" class="s">spool winds (clockwise)</text>
+
+  <path d="M280 1018 V1046" class="sig" marker-end="url(#aG)"/>
+  <rect x="70" y="1050" width="420" height="120" rx="14" class="sense"/>
+  <text x="90" y="1088" class="t">4 fingers straighten ✋</text>
+  <text x="90" y="1116" class="s">index · middle · ring · little casings</text>
+  <text x="90" y="1140" class="s">all pulled at once · no thumb for now</text>
+
+  <!-- relax / return note -->
+  <rect x="520" y="930" width="230" height="240" rx="14" fill="#1b2120" stroke="#7d8a90" stroke-width="1.5" stroke-dasharray="5 5"/>
+  <text x="538" y="964" class="t" font-size="18">Next hit: close</text>
+  <text x="538" y="994" class="s">servo back to 0°</text>
+  <text x="538" y="1018" class="s">→ spool unwinds</text>
+  <text x="538" y="1042" class="s">→ line goes slack</text>
+  <text x="538" y="1066" class="s">→ fingers curl back</text>
+  <text x="538" y="1090" class="s">   into a fist by</text>
+  <text x="538" y="1114" class="s">   themselves (stroke</text>
+  <text x="538" y="1138" class="s">   resting tone)</text>
+  <path d="M520 1110 H498" class="sig" marker-end="url(#aG)"/>
+
+  <!-- laptop power into Uno + servo -->
+  <rect x="520" y="690" width="230" height="200" rx="14" class="power"/>
+  <text x="538" y="724" class="t">Laptop USB</text>
+  <text x="538" y="750" class="s">5 V, on battery</text>
+  <text x="538" y="772" class="s">(charger unplugged)</text>
+  <text x="538" y="806" class="s">powers the Uno,</text>
+  <text x="538" y="828" class="s">and the servo via</text>
+  <text x="538" y="850" class="s">the Uno’s 5V pin</text>
+  <path d="M635 690 V648" class="pw" marker-end="url(#aO)"/>
+  <path d="M520 734 H498" class="pw" marker-end="url(#aO)"/>
+
+  </g>
+
+  <!-- ================= RIGHT: planned telemetry ================= -->
+
+  <g transform="translate(0,50)">
+  <rect x="860" y="384" width="660" height="88" rx="14" class="plan"/>
+  <text x="880" y="420" class="t" fill="#c4cfcb">Signal conditioning</text>
+  <text x="880" y="448" class="s">1/3 divider (3 × 47k): keeps the ESP32 pin under 3.3 V</text>
+  <path d="M1190 472 V502" class="pl" marker-end="url(#aD)"/>
+  <text x="1202" y="494" class="lbl">GPIO 1</text>
+
+  <rect x="860" y="506" width="660" height="88" rx="14" class="plan"/>
+  <text x="880" y="542" class="t" fill="#c4cfcb">ESP32-S3</text>
+  <text x="880" y="570" class="s">reads the EMG, sends it by Bluetooth LE</text>
+  <path d="M1190 594 V624" class="pl" marker-end="url(#aD)"/>
+  <text x="1202" y="616" class="lbl">Bluetooth LE</text>
+
+  <rect x="860" y="628" width="660" height="96" rx="14" class="plan"/>
+  <text x="880" y="664" class="t" fill="#c4cfcb">Web interface</text>
+  <text x="880" y="692" class="s">live EMG + 3D hand, recording, big STOP</text>
+  <text x="880" y="712" class="s">(website/v2, ready in demo mode)</text>
+
+  <!-- ================= POWER SUMMARY ================= -->
+  <text x="850" y="822" class="h" fill="#f08a4b">⚡ Two separate power sources</text>
+
+  <rect x="850" y="842" width="320" height="120" rx="14" class="power"/>
+  <text x="868" y="876" class="t" font-size="19">A · 2 × 9 V batteries</text>
+  <text x="868" y="904" class="s">→ EMG sensor only</text>
+  <text x="868" y="928" class="s">nothing else uses them</text>
+
+  <rect x="1200" y="842" width="330" height="120" rx="14" class="power"/>
+  <text x="1218" y="876" class="t" font-size="19">B · Laptop USB 5 V</text>
+  <text x="1218" y="904" class="s">→ Arduino Uno</text>
+  <text x="1218" y="928" class="s">→ MG996R (via Uno 5V pin)</text>
+
+  <text x="850" y="1000" class="s" fill="#d6dfdc">Grounds are joined (EMG GND ↔ Uno GND) so the Uno can read SIG.</text>
+
+  <rect x="850" y="1022" width="680" height="160" rx="14" fill="#3d1d1d" stroke="#ef4444" stroke-width="2"/>
+  <text x="870" y="1056" class="t" fill="#ff8a8a" font-size="19">⚠ Watch out</text>
+  <text x="870" y="1086" class="s" fill="#f1d0d0">• An MG996R can pull ~2.5 A; USB gives ~0.5 A. If the Uno resets</text>
+  <text x="870" y="1108" class="s" fill="#f1d0d0">  or the servo twitches, give the servo its own 5–6 V supply (grounds joined).</text>
+  <text x="870" y="1136" class="s" fill="#f1d0d0">• A0 takes max 5 V. Check SIG with a multimeter at full effort.</text>
+  <text x="870" y="1162" class="s" fill="#f1d0d0">• Laptop charger unplugged during every EMG test.</text>
+
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(60,1284)">
+    <path d="M0 0 H40" class="sig"/><text x="50" y="5" class="lbl">signal / control</text>
+    <path d="M200 0 H240" class="pw"/><text x="250" y="5" class="lbl">power</text>
+    <path d="M330 0 H370" class="pl"/><text x="380" y="5" class="lbl">planned (not wired yet)</text>
+  </g>
+</svg>
+</body></html>
