@@ -2,7 +2,7 @@
 // No install needed (uses Node's built-in test runner).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLine, LineBuffer, checkCommand } from '../js/protocol.js';
+import { parseLine, LineBuffer, checkCommand, parsePlotLine } from '../js/protocol.js';
 
 test('D line (v1 format) drives the index finger', () => {
   assert.deepEqual(parseLine('D,1830,0,IDLE'), { type: 'D', raw: 1830, servo: 0, state: 'IDLE' });
@@ -69,4 +69,16 @@ test('only o, c and s may be sent', () => {
   assert.equal(checkCommand('c'), 'c');
   assert.equal(checkCommand('s'), 's');
   for (const bad of ['90', 'O', 'x', 'o\n', '', 'servo,180']) assert.throws(() => checkCommand(bad));
+});
+
+test('serial plotter lines (Arduino Serial Plotter style)', () => {
+  assert.deepEqual(parsePlotLine('412.53'), { labels: [''], values: [412.53] });
+  assert.deepEqual(parsePlotLine('  10 20\t30 '), { labels: ['', '', ''], values: [10, 20, 30] });
+  assert.deepEqual(parsePlotLine('emg:412,limit:400'), { labels: ['emg', 'limit'], values: [412, 400] });
+  assert.deepEqual(parsePlotLine('emg: 412, limit: 400'), { labels: ['emg', 'limit'], values: [412, 400] });
+  assert.deepEqual(parsePlotLine('bend_%:12,flat:0,most_bent:100'), { labels: ['bend_%', 'flat', 'most_bent'], values: [12, 0, 100] });
+  assert.deepEqual(parsePlotLine('-1.5e2'), { labels: [''], values: [-150] });
+  const notPlots = ['', 'hello', 'rst:0x1 (POWERON),boot:0x8', 'entry 0x403c98d4', 'Flat = 1234 mV. Now bend it!',
+    'pin 2500 mV | change 40', '1 2 3 4 5 6 7 8 9', 'a:b', ':5', '12abc', 'NaN', 'Infinity', null, 5];
+  for (const line of notPlots) assert.equal(parsePlotLine(line), null, `should not plot: ${JSON.stringify(line)}`);
 });

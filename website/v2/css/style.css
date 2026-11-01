@@ -237,6 +237,11 @@ td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: mid
 /* ===================== CHARTS ===================== */
 .chart { display: block; width: 100%; height: 140px; }
 .chart.short { height: 100px; }
+.chart.tall { height: 240px; margin-top: 6px; }
+.plot-now { margin: 6px 0 0; font-variant-numeric: tabular-nums; font-size: .9375rem; }
+.log.monitor { max-height: 260px; min-height: 120px; }
+.inline-field select { font: inherit; padding: 6px 8px; min-height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); max-width: 100%; }
+code { font-size: .875em; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .8125rem; color: var(--muted); }
 .legend span::before { content: ""; display: inline-block; width: 12px; height: 3px; border-radius: 2px; background: var(--lc); margin-right: 5px; vertical-align: middle; }
 .legend span.dashed::before { background: repeating-linear-gradient(90deg, var(--lc) 0 4px, transparent 4px 7px); }

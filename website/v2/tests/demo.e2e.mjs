@@ -225,7 +225,8 @@ try {
     let ctrl;
     const port = {
       readable: null, writable: null,
-      async open() {
+      async open(opts) {
+        window.__baud = opts && opts.baudRate;
         this.readable = new ReadableStream({ start(c) { ctrl = c; } });
         this.writable = new WritableStream({ write(chunk) { window.__sent.push('usb:' + dec.decode(chunk)); } });
       },
@@ -286,12 +287,25 @@ try {
   await hw.click('#btnDisc');
   await hw.waitForTimeout(300);
 
-  // --- wrong sketch flashed (Serial Plotter format): the page should say so ---
+  // --- serial plotter: the 29 Oct Uno sketch prints one number per line at 9600 baud ---
+  await hw.selectOption('#baud', '9600');
   await hw.click('#btnUsb');
-  for (let i = 0; i < 18; i++) await feed('__usb', 'bend_%:12,flat:0,most_bent:100\r\n', 200);
-  check(/not in the ExoHand format/.test(await hw.textContent('#status')), 'fake USB: Serial Plotter lines → "wrong sketch" message');
+  await hw.waitForTimeout(200);
+  check((await hw.evaluate(() => window.__baud)) === 9600, 'fake USB: the chosen USB speed (9600) is used to open the port');
+  for (let i = 0; i < 18; i++) await feed('__usb', `${(200 + 150 * Math.sin(i / 2)).toFixed(2)}\r\n`, 200);
+  check(/plain numbers/.test(await hw.textContent('#status')), 'fake USB: plain numbers → "drawn in the Serial plotter" message');
+  check((await hw.evaluate(() => window.exo.S.plotted)) >= 18, 'fake USB: every number line is plotted');
+  check(/value 1/.test(await hw.textContent('#legendPlot')) && /Now: value 1/.test(await hw.textContent('#plotNow')), 'plotter shows a legend and the latest value');
+  check(/\d+\.\d\d/.test(await hw.textContent('#monitor')), 'serial monitor shows the raw lines');
+  await hw.evaluate(() => { document.querySelector('.control-bar').style.visibility = 'hidden'; });   // the sticky STOP bar would cover the picture
+  await hw.locator('#plotterPanel').screenshot({ path: path.join(shotsDir, 'v2_serial_plotter.png') });
+  await hw.evaluate(() => { document.querySelector('.control-bar').style.visibility = ''; });
+  // labelled values, like flex_visual_test: one line per label
+  for (let i = 0; i < 4; i++) await feed('__usb', `bend_%:${i * 20},flat:0,most_bent:100\r\n`, 100);
+  check(/bend_%.*flat.*most_bent/.test(await hw.textContent('#legendPlot')), 'plotter: labelled values get their own named lines');
   await hw.click('#btnDisc');
   await hw.waitForTimeout(300);
+  await hw.selectOption('#baud', '115200');
 
   // --- Bluetooth, new board (multi_flex_devkit sends F lines in 20-byte pieces) ---
   await hw.evaluate(() => { window.__sent.length = 0; });

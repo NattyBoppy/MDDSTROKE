@@ -1,7 +1,7 @@
 /*
   serial.js: "Connect by USB" using Web Serial (Chrome / Edge on a laptop only).
   ---------------------------------------------------------------------------
-  Opens the board's USB port at 115200 baud, hands every chunk of text to onText(),
+  Opens the board's USB port (115200 baud unless told otherwise), hands every chunk of text to onText(),
   and can send single command characters back (o / c / s, checked in protocol.js).
 */
 import { checkCommand } from './protocol.js';
@@ -9,8 +9,9 @@ import { checkCommand } from './protocol.js';
 export const usbSupported = () => typeof navigator !== 'undefined' && 'serial' in navigator;
 
 export class SerialConnection {
-  constructor({ onText, onClose }) {
+  constructor({ onText, onClose, baudRate = 115200 }) {
     this.kind = 'usb';
+    this.baudRate = baudRate;  // must match Serial.begin(...) in the sketch
     this.onText = onText;      // called with each chunk of text from the board
     this.onClose = onClose;    // called once, with a message, when the link ends
     this.port = null;
@@ -28,7 +29,7 @@ export class SerialConnection {
       throw new Error('No board chosen. Press Connect by USB and pick the board (often "USB-SERIAL CH343", "CP210x" or "USB JTAG/serial").');
     }
     try {
-      await this.port.open({ baudRate: 115200 });
+      await this.port.open({ baudRate: this.baudRate });
     } catch {
       throw new Error('That port is busy. Close the Arduino Serial Monitor (only one program can use the port), then try again.');
     }

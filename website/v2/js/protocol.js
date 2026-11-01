@@ -117,3 +117,30 @@ export class LineBuffer {
 
   clear() { this.rest = ''; }
 }
+
+/**
+ * Arduino Serial Plotter style lines, for any sketch (like the 29 Oct Uno code that prints one number).
+ * Numbers separated by spaces, tabs or commas, each optionally with a label: "412.5", "10 20 30", "emg:412,limit:400".
+ * Returns { labels:[...], values:[...] } (label '' = no label), or null if the line is not all numbers.
+ *   parsePlotLine('emg:412,limit:400')  ->  { labels:['emg','limit'], values:[412,400] }
+ */
+const PLOT_NUM = /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/;
+const PLOT_LABEL = /^[\w%.\-]{1,24}$/;
+export function parsePlotLine(line) {
+  if (typeof line !== 'string') return null;
+  const text = line.trim().replace(/:\s+/g, ':');       // "emg: 412" -> "emg:412"
+  if (!text || text.length > 200) return null;
+  const tokens = text.split(/[\s,]+/).filter(Boolean);
+  if (!tokens.length || tokens.length > 8) return null;  // the Arduino plotter also stops at 8 lines
+  const labels = [], values = [];
+  for (const token of tokens) {
+    const colon = token.lastIndexOf(':');
+    const label = colon > 0 ? token.slice(0, colon) : '';
+    const number = colon > 0 ? token.slice(colon + 1) : token;
+    if (!PLOT_NUM.test(number)) return null;             // boot messages like "rst:0x1 (POWERON)" fail here
+    if (label && !PLOT_LABEL.test(label)) return null;
+    labels.push(label);
+    values.push(parseFloat(number));
+  }
+  return { labels, values };
+}

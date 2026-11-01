@@ -12,7 +12,16 @@ The **live hand tracker**: a realistic 3D hand that copies the real fingers, wit
 | [`screenshots/`](screenshots/) | pictures of the website (made by the automatic test) |
 | [`v2_build_prompt.md`](v2_build_prompt.md) | the original instructions the website was built from |
 
-**Not connected to the current Uno setup yet.** The website reads data from the **ESP32-S3** over USB or Bluetooth, and the 29 Oct setup uses an Arduino Uno with no ESP32.
-For now, use it in **Demo** mode, or connect an ESP32 running `misc/firmware/flex/flex_devkit_test`.
+## Use it with the 29 Oct Uno now: the Serial plotter
+The website has a **Serial plotter + monitor** that works like the Arduino IDE's, so you can watch the EMG live in Chrome:
+1. Upload the 29 Oct code to the Uno, and **close** the Arduino IDE's Serial Monitor / Plotter.
+2. Open the website in **Chrome**. Under **1 · Connect**, set **USB speed** to **9600 (Uno 29 Oct EMG code)**.
+3. Click **Connect by USB** and pick the Uno's port.
+4. The **Serial plotter** panel draws the smoothed EMG live. **Pause**, **Clear** and **Show the last 10 / 30 / 60 s** work like you'd expect.
+
+![serial plotter](screenshots/v2_serial_plotter.png)
+
+The **3D hand** only moves with ExoHand data lines (`D`, `F`, `M`, `E`), which the ESP32 sketches send. The Uno code prints plain numbers, so it shows up in the plotter only.
+Wireless (Bluetooth / Wi-Fi) needs the ESP32-S3; see "Planned next" in the main README.
 
 GitHub publishes this folder automatically every time something changes in it on `main` (see `.github/workflows/pages.yml`).

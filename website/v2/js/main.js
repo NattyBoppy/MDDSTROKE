@@ -5,7 +5,7 @@
            ->  calibration (raw -> bend)  ->  3D hand (hand.js), finger cards, charts
   buttons  ->  only ever "o", "c" or "s" to the device. STOP and the Space key send "s".
 */
-import { FINGERS, COMMANDS, LineBuffer, parseLine } from './protocol.js';
+import { FINGERS, COMMANDS, LineBuffer, parseLine, parsePlotLine } from './protocol.js';
 import { HandView } from './hand.js';
 import { Calibration } from './calibration.js';
 import { LiveChart } from './charts.js';
@@ -19,7 +19,7 @@ const STALE_MS = 1500;          // a finger with no reading for this long counts
 
 /* ---------------- saved settings (theme, hand side, skin, ...) ---------------- */
 const SETTINGS_KEY = 'exohand-v2-settings';
-const settings = Object.assign({ side: 'right', skin: 0, follow: 'index', threshold: 100, theme: '', bendRaises: false },
+const settings = Object.assign({ side: 'right', skin: 0, follow: 'index', threshold: 100, theme: '', bendRaises: false, baud: 115200 },
   readJSON(SETTINGS_KEY));
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* blocked: fine */ } }
 function readJSON(key) { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; } }
@@ -36,6 +36,7 @@ const S = {
   state: '',
   emg: { ext: null, flex: null, on: false, at: 0 },
   lines: 0, ignored: 0, lastGoodAt: 0, lastAnyAt: 0,
+  plotted: 0, lastPlotAt: 0, monitor: [], monitorDirty: false, plotPaused: false, plotPausedAt: 0,
   log: [],
   recording: false, rec: [], recStart: 0,
 };
@@ -53,7 +54,14 @@ function handleLine(line) {
   const msg = parseLine(line);
   logLine(line, !!msg);
   S.lastAnyAt = performance.now();
-  if (!msg) { S.ignored++; return; }
+  addToMonitor(line);
+  if (!msg) {
+    // not an ExoHand line: maybe plain numbers for the serial plotter (like the Arduino IDE)
+    const plot = parsePlotLine(line);
+    if (plot) { S.plotted++; S.lastPlotAt = S.lastAnyAt; plotPoint(plot, S.lastAnyAt); }
+    else S.ignored++;
+    return;
+  }
   S.lines++;
   const now = performance.now();
   S.lastGoodAt = now;
@@ -139,12 +147,14 @@ function resetLive() {
   S.emg = { ext: null, flex: null, on: false, at: 0 };
   S.lastGoodAt = 0;
   S.lastAnyAt = 0;
+  S.lastPlotAt = 0;
 }
 
 async function connect(kind) {
   if (S.mode === 'demo') stopDemo();
   const Conn = kind === 'usb' ? SerialConnection : BleConnection;
   const conn = new Conn({
+    baudRate: settings.baud,
     onText: text => buffer.push(text),
     onClose: msg => { if (S.conn === conn) { S.conn = null; setMode('none'); setStatus(msg, msg === 'Disconnected.' ? '' : 'warn'); } },
   });
@@ -297,6 +307,46 @@ $('emgThreshold').oninput = e => {
   const v = parseFloat(e.target.value);
   if (Number.isFinite(v) && v >= 0) { chartEmg.threshold = settings.threshold = v; saveSettings(); }
 };
+
+/* ---------------- serial plotter + monitor (like the Arduino IDE) ---------------- */
+const PLOT_COLOURS = ['--c-index', '--c-little', '--c-middle', '--c-ring', '--c-thumb', '--c-servo1', '--c-emg-flex', '--muted'];
+const chartPlot = new LiveChart($('chartPlot'), { series: [], autoRange: true, ticks: 4, windowMs: 30000 });
+let plotNames = [];          // series names, e.g. ['value 1'] or ['emg', 'limit']
+let plotLatest = [];
+
+function plotPoint(plot, t) {
+  if (S.plotPaused) return;
+  const names = plot.values.map((v, i) => plot.labels[i] || `value ${i + 1}`);
+  if (names.join('|') !== plotNames.join('|')) {          // new set of series: rebuild the legend
+    plotNames = names;
+    chartPlot.series = names.map((n, i) => ({ key: n, label: n, color: PLOT_COLOURS[i % PLOT_COLOURS.length] }));
+    legend($('legendPlot'), names.map((n, i) => [n, PLOT_COLOURS[i % PLOT_COLOURS.length]]));
+  }
+  const values = {};
+  names.forEach((n, i) => { values[n] = plot.values[i]; });
+  chartPlot.push(t, values);
+  plotLatest = names.map((n, i) => `${n} ${formatNumber(plot.values[i])}`);
+}
+function formatNumber(v) { return Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2); }
+
+function addToMonitor(line) {
+  if (S.plotPaused) return;
+  S.monitor.push(line.slice(0, 160));
+  if (S.monitor.length > 300) S.monitor.splice(0, S.monitor.length - 300);
+  S.monitorDirty = true;
+}
+$('btnPlotPause').onclick = () => {
+  S.plotPaused = !S.plotPaused;
+  S.plotPausedAt = performance.now();
+  $('btnPlotPause').textContent = S.plotPaused ? 'Resume' : 'Pause';
+};
+$('btnPlotClear').onclick = () => {
+  chartPlot.clear(); plotLatest = []; S.monitor = []; S.monitorDirty = true;
+};
+$('plotWindow').onchange = e => { chartPlot.windowMs = +e.target.value; };
+$('baud').value = String(settings.baud);
+if ($('baud').value !== String(settings.baud)) $('baud').value = '115200';
+$('baud').onchange = e => { settings.baud = +e.target.value; saveSettings(); };
 
 /* ---------------- recording (CSV) ---------------- */
 $('btnRec').onclick = () => {
@@ -468,6 +518,7 @@ function step(now) {
     chartEmg.push(now, { ext: emgFresh ? S.emg.ext : null, flex: emgFresh ? S.emg.flex : null }, emgFresh && S.emg.on);
   }
   chartFlex.draw(now); chartServo.draw(now); chartEmg.draw(now);
+  chartPlot.draw(S.plotPaused ? S.plotPausedAt : now);
 
   // 4. recording: 20 rows a second
   if (S.recording && now - lastRec >= 50) { lastRec = now; recordRow(now); }
@@ -506,18 +557,30 @@ function updateUi(now) {
   $('fLines').textContent = S.lines;
   $('fIgnored').textContent = S.ignored;
   $('log').textContent = S.log.join('\n');
+  if (S.monitorDirty) {
+    S.monitorDirty = false;
+    const mon = $('monitor');
+    mon.textContent = S.monitor.join('\n');
+    if ($('monitorScroll').checked) mon.scrollTop = mon.scrollHeight;
+  }
+  $('plotNow').textContent = plotLatest.length ? 'Now: ' + plotLatest.join(' · ') + (S.plotPaused ? ' (paused)' : '') : 'Waiting for numbers…';
   $('recInfo').textContent = S.recording ? `Recording: ${S.rec.length} rows` : (S.rec.length ? `${S.rec.length} rows ready` : '');
 
   // connected but silent?
   if (S.conn) {
     const silent = now - Math.max(S.lastGoodAt, S.connectedAt || 0) > 3000;
     // text IS arriving, but none of it is in our format: almost always the wrong sketch
-    const wrongFormat = silent && now - S.lastAnyAt < 2000 && S.lastAnyAt > (S.connectedAt || 0);
-    if (wrongFormat && S.linkNote !== 'format') {
+    const plotting = silent && now - S.lastPlotAt < 2000 && S.lastPlotAt > (S.connectedAt || 0);
+    const wrongFormat = !plotting && silent && now - S.lastAnyAt < 2000 && S.lastAnyAt > (S.connectedAt || 0);
+    if (plotting && S.linkNote !== 'plot') {
+      S.linkNote = 'plot';
+      setStatus('Connected. The board is sending plain numbers: they are drawn in the Serial plotter below. '
+        + '(The 3D hand only moves with ExoHand lines: D, F, M or E.)', 'ok');
+    } else if (wrongFormat && S.linkNote !== 'format') {
       S.linkNote = 'format';
-      setStatus('The board is sending text, but not in the ExoHand format (see "Last lines from the device" in section 5). '
-        + 'A Serial Plotter sketch like flex_visual_test is probably flashed. Upload flex_devkit_test or multi_flex_devkit instead.', 'warn');
-    } else if (silent && !wrongFormat && S.linkNote !== 'silent') {
+      setStatus('The board is sending text the page cannot read (see the Serial monitor). Check that the USB speed matches '
+        + 'Serial.begin(...) in the sketch. For the 3D hand, upload flex_devkit_test or multi_flex_devkit.', 'warn');
+    } else if (silent && !wrongFormat && !plotting && S.linkNote !== 'silent') {
       S.linkNote = 'silent';
       setStatus('Connected, but nothing is arriving from the board. Check that the right sketch is flashed and press the board\'s RST button.', 'warn');
     } else if (!silent && railReading(now) && S.linkNote !== 'rail') {

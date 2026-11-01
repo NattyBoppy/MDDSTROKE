@@ -72,6 +72,8 @@ Our wiring makes the reading go **down** when the finger bends. If yours goes up
 | **Left / Right hand**, **3/4 · Back · Palm · Side**, **Reset view** | change the 3D view. Drag to turn the hand, scroll or pinch to zoom. |
 | Skin circles | three skin tones. |
 | **Load your own hand (.glb)** | try a different rigged hand model. The bones need names with thumb / index / middle / ring / pinky (or little). If the fingers bend backwards, tick **Bend the other way**. |
+| **USB speed** | must match `Serial.begin(...)` in the sketch: **115200** for the ExoHand ESP32 sketches, **9600** for the 29 Oct Uno EMG code. |
+| **Serial plotter + monitor** | like the Arduino IDE: any sketch that prints numbers (`412.5` or `emg:412,limit:400`) is drawn live. The monitor shows every line. |
 | **Start recording → Download CSV** | saves time, raw readings, % open, degrees, servo angles and EMG (20 rows a second). |
 
 **Safety:** the website only ever sends `o`, `c` or `s`. It never sends angles. The motor limits live in the firmware (`SAFE_MIN` / `SAFE_MAX` at the top of each sketch).

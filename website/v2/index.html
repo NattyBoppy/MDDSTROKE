@@ -101,6 +101,16 @@
         <button class="secondary" id="btnDemo">Demo (no hardware)</button>
         <button class="ghost" id="btnDisc" hidden>Disconnect</button>
       </div>
+      <label class="inline-field">USB speed
+        <select id="baud">
+          <option value="115200">115200 (ExoHand ESP32 sketches)</option>
+          <option value="9600">9600 (Uno 29 Oct EMG code)</option>
+          <option value="19200">19200</option>
+          <option value="38400">38400</option>
+          <option value="57600">57600</option>
+          <option value="230400">230400</option>
+        </select>
+        <span class="hint">must match <code>Serial.begin(...)</code> in the sketch</span></label>
       <p class="status" id="status">Not connected. Plug the board into this laptop, then press Connect by USB.</p>
       <p class="hint" id="support"></p>
       <details>
@@ -115,6 +125,31 @@
           </tbody>
         </table>
         <p class="hint">USB and Bluetooth only work on an <b>https://</b> site (GitHub Pages, Netlify) or on <b>localhost</b>.</p>
+      </details>
+    </section>
+
+    <section class="panel" id="plotterPanel">
+      <h2>Serial plotter + monitor</h2>
+      <p class="hint">Works like the Arduino IDE's Serial Plotter: any sketch that prints numbers
+        (for example <code>Serial.println(smoothed);</code> or <code>emg:412,limit:400</code>) is drawn here live.
+        Close the Arduino Serial Monitor / Plotter first.</p>
+      <div class="legend" id="legendPlot"></div>
+      <canvas class="chart tall" id="chartPlot" aria-label="Serial plotter: numbers from the board over time"></canvas>
+      <p class="plot-now" id="plotNow">Waiting for numbers…</p>
+      <div class="row">
+        <button class="secondary small" id="btnPlotPause">Pause</button>
+        <button class="ghost small" id="btnPlotClear">Clear</button>
+        <label class="inline-field">Show the last
+          <select id="plotWindow">
+            <option value="10000">10 s</option>
+            <option value="30000" selected>30 s</option>
+            <option value="60000">60 s</option>
+          </select></label>
+      </div>
+      <details id="monitorBox" open>
+        <summary>Serial monitor (everything the board prints)</summary>
+        <pre class="log monitor" id="monitor" aria-live="off"></pre>
+        <label class="check small"><input type="checkbox" id="monitorScroll" checked> Auto-scroll</label>
       </details>
     </section>
 

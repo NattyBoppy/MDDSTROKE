@@ -17,6 +17,7 @@ export class LiveChart {
     this.min = opts.min ?? 0;
     this.max = opts.max ?? 100;
     this.auto = !!opts.auto;                // let the top of the chart grow with the data
+    this.autoRange = !!opts.autoRange;      // fit both the top and the bottom to the data (serial plotter)
     this.unit = opts.unit || '';
     this.ticks = opts.ticks || 3;
     this.windowMs = opts.windowMs || 30000;
@@ -57,7 +58,23 @@ export class LiveChart {
       if (this.threshold != null && this.threshold > hi) hi = this.threshold;
       hi = niceCeil(hi * 1.1);
     }
-    const pad = { l: 40, r: 8, t: 8, b: 18 };
+    if (this.autoRange) {
+      let mn = Infinity, mx = -Infinity;
+      for (const p of this.points) {
+        if (now - p.t > this.windowMs) continue;
+        for (const s of this.series) {
+          const v = p.values[s.key];
+          if (v == null) continue;
+          if (v < mn) mn = v;
+          if (v > mx) mx = v;
+        }
+      }
+      if (!Number.isFinite(mn)) { mn = 0; mx = 1; }
+      if (mx - mn < 1e-6) { mn -= 1; mx += 1; }
+      const pad = (mx - mn) * 0.08;
+      lo = mn - pad; hi = mx + pad;
+    }
+    const pad = { l: 46, r: 8, t: 8, b: 18 };
     const X = t => pad.l + (1 - (now - t) / this.windowMs) * (w - pad.l - pad.r);
     const Y = v => pad.t + (1 - (v - lo) / (hi - lo || 1)) * (h - pad.t - pad.b);
 
@@ -70,9 +87,9 @@ export class LiveChart {
       const v = lo + (hi - lo) * (i / this.ticks);
       const y = Math.round(Y(v)) + 0.5;
       ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
-      ctx.fillText(Math.round(v) + this.unit, 2, y + 4);
+      ctx.fillText(tickText(v, hi - lo) + this.unit, 2, y + 4);
     }
-    ctx.fillText('−30 s', pad.l, h - 4);
+    ctx.fillText(`−${Math.round(this.windowMs / 1000)} s`, pad.l, h - 4);
     ctx.textAlign = 'right'; ctx.fillText('now', w - pad.r, h - 4); ctx.textAlign = 'left';
 
     // shaded bands where the marker flag was on (EMG trigger ON)
@@ -120,6 +137,13 @@ export class LiveChart {
     }
     ctx.restore();
   }
+}
+
+// tick labels: whole numbers for big ranges, decimals for small ones
+function tickText(v, range) {
+  if (range >= 20) return String(Math.round(v));
+  if (range >= 2) return v.toFixed(1);
+  return v.toFixed(2);
 }
 
 function niceCeil(v) {
