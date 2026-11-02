@@ -30,6 +30,12 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
+## 2 Nov 2026 (part 2): HC-05 Bluetooth sketch
+- New sketch `arduino_ide_code/uno_emg_mg996r_hc05_2nov`: the 29 Oct code + `SoftwareSerial` HC-05 on D10 (RX) / D11 (TX), 9600. Prints the smoothed EMG to USB and Bluetooth.
+- HC-05 paired with the MacBook: shows up as the port `cu.HC-05`. Website run locally (`python3 -m http.server 8000` in `website/`, open `/v2/`); it loads with no errors.
+- Not yet checked: the EMG reaching the website's Serial plotter over Bluetooth (USB speed 9600, Connect by USB, pick HC-05).
+- Watch: `SoftwareSerial` pauses interrupts while sending, so the servo may twitch during a move. No D2 E-stop in this sketch. D10 / D11 clash with the planned SD pins.
+
 ## 2 Nov 2026: upgrade plan with parts on hand (README "Planned next" A)
 - Parts on hand: HC-05 Bluetooth, DS3231 real-time clock, YwRobot microSD module + 16 GB card, Adafruit 2.8" TFT cap-touch shield (ILI9341 + FT6206 + own microSD slot).
 - Plan written in the README: HC-05 on D1 (one-way, 1k/2k divider) → laptop COM port → website Serial plotter at 9600; DS3231 on A4/A5; SD on D10–D13; one CSV per session with date/time.

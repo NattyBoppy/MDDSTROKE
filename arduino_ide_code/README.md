@@ -4,6 +4,7 @@
 |---|---|---|
 | [`working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct`](working_code_uno_r3_9v_analog_emg_hand_holder_mg996r_29oct/) | 29 Oct 2026 | **Working code.** Arduino Uno R3 + 2 × 9 V + analog EMG sensor + hand holder + MG996R |
 | [`uno_emg_mg996r_estop_1nov`](uno_emg_mg996r_estop_1nov/) | 1 Nov 2026 | the 29 Oct code **+ emergency stop** on D2. **Not tested on hardware yet.** It needs the E-stop wiring: without the 10k resistor on D2, the pin floats and the sketch may stop by itself. |
+| [`uno_emg_mg996r_hc05_2nov`](uno_emg_mg996r_hc05_2nov/) | 2 Nov 2026 | the 29 Oct code **+ HC-05 Bluetooth** (`SoftwareSerial` on **D10 / D11**, 9600). Sends the smoothed EMG to the website's Serial plotter without a cable. **No E-stop** in this version. D10 / D11 clash with the planned microSD pins. |
 
 *(Folder and file names use underscores, not spaces or `+`, because the Arduino IDE refuses sketch names with those. The folder and the `.ino` file must have the same name.)*
 

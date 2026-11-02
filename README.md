@@ -44,7 +44,7 @@ When the patient **tries** to open the hand, a sensor on the forearm picks up th
 
 | What | What it's for | Status |
 |---|---|---|
-| **HC-05 Bluetooth** | live data to the laptop / website, no cable | ⏳ to wire + test |
+| **HC-05 Bluetooth** | live data to the laptop / website, no cable | 🔧 sketch `uno_emg_mg996r_hc05_2nov` (D10 / D11, see below); paired with a MacBook, website test to do |
 | **microSD module** | saves every session as a file → history for the report | ⏳ to wire + code |
 | **DS3231 clock** | puts the real **date and time** on every saved reading | ⏳ to wire + code |
 | **2.8" TFT touch shield** | screen on the device (optional) | ⏸ parked for the ESP32-S3, see A4 |
@@ -67,6 +67,7 @@ When the patient **tries** to open the hand, a sensor on the forearm picks up th
    - The website's **Serial plotter** opens it like a USB port: USB speed **9600** (the HC-05's default), click **Connect by USB**, pick the Bluetooth COM port. No website change needed for a first test.
    - With the D1 wiring above, everything the sketch already prints goes out over USB **and** Bluetooth at the same time, so the first test needs **no code change**.
    - It's one-way (Uno → laptop). If the website should later send `o` / `c` / `s` over Bluetooth: HC-05 TXD → D7 with `SoftwareSerial`. The hardware E-stop stays the real stop either way.
+   - **2 Nov sketch** [`arduino_ide_code/uno_emg_mg996r_hc05_2nov`](arduino_ide_code/uno_emg_mg996r_hc05_2nov/) uses `SoftwareSerial` instead: HC-05 TXD → **D10**, D11 → 1k → HC-05 RXD (2k to GND). This takes the SD module's CS / MOSI pins, so move the HC-05 (e.g. D7 / D8) before adding the SD card. On a Mac the HC-05 shows up as the port `cu.HC-05`.
    - Limits: an iPhone can't see an HC-05 at all, and Chrome's Web Bluetooth ("ExoHand") only works with the ESP32 (see B1).
 2. **microSD → saved history of every session.**
    - One CSV file per session, named from the clock's date and time (8 characters max, e.g. `11051432.CSV` = 5 Nov, 14:32).
