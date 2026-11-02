@@ -8,8 +8,8 @@
     - HC-05 TXD -> D10 (Uno RX for Bluetooth)
     - D11 -> 1k -> HC-05 RXD, with 2k from RXD to GND (the HC-05 pins are 3.3 V)
     - HC-05 VCC -> 5V, GND -> GND
-  On the laptop: pair the HC-05 (PIN 1234 or 0000), then in the website set USB speed 9600,
-  click Connect by USB and pick the HC-05 port. The Serial plotter shows the EMG live.
+  On the laptop: pair the HC-05 (PIN 1234 or 0000), then in the website click
+  Connect HC-05 (Bluetooth) and pick the HC-05 port. The Serial plotter shows the EMG live.
 
   NOT in this version: the D2 emergency stop (see uno_emg_mg996r_estop_1nov), and the
   website's STOP button (nothing is read from Bluetooth). Keep a hand on the power.

@@ -1,7 +1,7 @@
 /*
   main.js: connects all the parts of website v2.
   ------------------------------------------------
-  data in  (USB / Bluetooth / demo)  ->  LineBuffer + parseLine (protocol.js)
+  data in  (USB / Bluetooth / HC-05 / demo)  ->  LineBuffer + parseLine (protocol.js)
            ->  calibration (raw -> bend)  ->  3D hand (hand.js), finger cards, charts
   buttons  ->  only ever "o", "c" or "s" to the device. STOP and the Space key send "s".
 */
@@ -10,7 +10,7 @@ import { HandView } from './hand.js';
 import { Calibration } from './calibration.js';
 import { LiveChart } from './charts.js';
 import { DemoDevice, DEMO_RAW } from './demo.js';
-import { SerialConnection, usbSupported } from './serial.js';
+import { SerialConnection, usbSupported, HC05_BAUD } from './serial.js';
 import { BleConnection, bleSupported } from './ble.js';
 
 const $ = id => document.getElementById(id);
@@ -26,8 +26,8 @@ function readJSON(key) { try { return JSON.parse(localStorage.getItem(key)) || {
 
 /* ---------------- live state ---------------- */
 const S = {
-  mode: 'none',                       // 'none' | 'usb' | 'ble' | 'demo'
-  conn: null,                         // the open USB or Bluetooth connection
+  mode: 'none',                       // 'none' | 'usb' | 'ble' | 'hc05' | 'demo'
+  conn: null,                         // the open USB, Bluetooth or HC-05 connection
   raw: [null, null, null, null, null],// last raw flex reading per finger
   rawAt: [0, 0, 0, 0, 0],             // when it arrived (ms)
   shown: [0, 0, 0, 0, 0],             // bend shown for each finger (0..1)
@@ -112,8 +112,17 @@ function stopNow() {
   const b = $('cmdStop');
   b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
   demo.setAuto(false); updateAutoButton();
-  send(COMMANDS.stop).then(ok => { if (ok) setStatus('STOP sent.', 'ok'); });
+  send(COMMANDS.stop).then(ok => {
+    if (ok && S.mode === 'hc05') setStatus(HC05_DEAF, 'warn');
+    else if (ok) setStatus('STOP sent.', 'ok');
+  });
 }
+function sendMove(ch) {
+  send(ch).then(ok => { if (ok && S.mode === 'hc05') setStatus(HC05_DEAF, 'warn'); });
+}
+// The 2 Nov HC-05 sketch only talks, it never reads, so the buttons can't reach the motor.
+const HC05_DEAF = 'Sent, but the HC-05 sketch (uno_emg_mg996r_hc05_2nov) does not listen for commands, '
+  + 'so this does NOT move or stop the motor. To stop it, cut the power.';
 
 /* ---------------- connecting ---------------- */
 function setStatus(msg, kind = '') { const el = $('status'); el.textContent = msg; el.className = 'status ' + kind; }
@@ -122,12 +131,13 @@ function setMode(mode) {
   S.mode = mode;
   const pill = $('connPill');
   pill.dataset.kind = mode;
-  pill.textContent = { none: 'Not connected', usb: 'Connected by USB', ble: 'Connected by Bluetooth', demo: 'Demo' }[mode];
+  pill.textContent = { none: 'Not connected', usb: 'Connected by USB', ble: 'Connected by Bluetooth', hc05: 'Connected by HC-05', demo: 'Demo' }[mode];
   const busy = mode !== 'none';
-  $('btnUsb').disabled = busy; $('btnBle').disabled = busy;
-  $('btnDisc').hidden = !(mode === 'usb' || mode === 'ble');
+  const linked = mode === 'usb' || mode === 'ble' || mode === 'hc05';
+  $('btnUsb').disabled = busy; $('btnBle').disabled = busy; $('btnHc05').disabled = busy;
+  $('btnDisc').hidden = !linked;
   $('btnDemo').textContent = mode === 'demo' ? 'Stop demo' : 'Demo (no hardware)';
-  $('btnDemo').disabled = mode === 'usb' || mode === 'ble';
+  $('btnDemo').disabled = linked;
   $('cmdOpen').disabled = $('cmdClose').disabled = !busy;
   $('btnAuto').disabled = mode !== 'demo';
   $('demoOptions').hidden = mode !== 'demo';
@@ -152,13 +162,15 @@ function resetLive() {
 
 async function connect(kind) {
   if (S.mode === 'demo') stopDemo();
-  const Conn = kind === 'usb' ? SerialConnection : BleConnection;
+  const Conn = kind === 'ble' ? BleConnection : SerialConnection;
   const conn = new Conn({
-    baudRate: settings.baud,
+    baudRate: kind === 'hc05' ? HC05_BAUD : settings.baud,
+    bluetooth: kind === 'hc05',
     onText: text => buffer.push(text),
     onClose: msg => { if (S.conn === conn) { S.conn = null; setMode('none'); setStatus(msg, msg === 'Disconnected.' ? '' : 'warn'); } },
+    onStatus: (msg, kind) => { if (S.conn === conn) { S.linkNote = 'reconnect'; setStatus(msg, kind); } },
   });
-  setStatus(kind === 'usb' ? 'Pick the board in the pop-up…' : 'Pick ExoHand in the pop-up…');
+  setStatus({ usb: 'Pick the board in the pop-up…', ble: 'Pick ExoHand in the pop-up…', hc05: 'Pick HC-05 in the pop-up…' }[kind]);
   try {
     await conn.open();
   } catch (err) {
@@ -170,7 +182,11 @@ async function connect(kind) {
   S.conn = conn;
   S.connectedAt = performance.now();
   setMode(kind);
-  setStatus(kind === 'usb' ? 'Connected by USB. Waiting for readings…' : `Connected by Bluetooth to ${conn.name}. Waiting for readings…`, 'ok');
+  setStatus({
+    usb: 'Connected by USB. Waiting for readings…',
+    ble: `Connected by Bluetooth to ${conn.name}. Waiting for readings…`,
+    hc05: 'Connected to the HC-05 by Bluetooth. Waiting for readings…',
+  }[kind], 'ok');
 }
 
 async function disconnect() {
@@ -434,13 +450,14 @@ $('btnBuiltIn').onclick = () => { customBuffer = null; $('flipBend').checked = f
 /* ---------------- other buttons ---------------- */
 $('btnUsb').onclick = () => connect('usb');
 $('btnBle').onclick = () => connect('ble');
+$('btnHc05').onclick = () => connect('hc05');
 $('btnDisc').onclick = disconnect;
 $('btnDemo').onclick = () => (S.mode === 'demo' ? stopDemo() : startDemo());
 $('btnAuto').onclick = () => { demo.setAuto(!demo.auto); updateAutoButton(); };
 $('demoIndexOnly').onchange = e => { demo.indexOnly = e.target.checked; resetLive(); calDemo.resetSeen(); };
 $('demoResist').onchange = e => { demo.resist = e.target.checked; };
-$('cmdOpen').onclick = () => send(COMMANDS.open);
-$('cmdClose').onclick = () => send(COMMANDS.close);
+$('cmdOpen').onclick = () => sendMove(COMMANDS.open);
+$('cmdClose').onclick = () => sendMove(COMMANDS.close);
 $('cmdStop').onclick = stopNow;
 document.querySelectorAll('input[name="follow"]').forEach(r => {
   r.checked = r.value === settings.follow;
@@ -567,22 +584,28 @@ function updateUi(now) {
   $('recInfo').textContent = S.recording ? `Recording: ${S.rec.length} rows` : (S.rec.length ? `${S.rec.length} rows ready` : '');
 
   // connected but silent?
-  if (S.conn) {
+  if (S.conn && !S.conn.reopening) {      // while the HC-05 reconnects, its own message stays up
     const silent = now - Math.max(S.lastGoodAt, S.connectedAt || 0) > 3000;
     // text IS arriving, but none of it is in our format: almost always the wrong sketch
     const plotting = silent && now - S.lastPlotAt < 2000 && S.lastPlotAt > (S.connectedAt || 0);
     const wrongFormat = !plotting && silent && now - S.lastAnyAt < 2000 && S.lastAnyAt > (S.connectedAt || 0);
     if (plotting && S.linkNote !== 'plot') {
       S.linkNote = 'plot';
-      setStatus('Connected. The board is sending plain numbers: they are drawn in the Serial plotter below. '
-        + '(The 3D hand only moves with ExoHand lines: D, F, M or E.)', 'ok');
+      setStatus((S.mode === 'hc05' ? 'Connected to the HC-05. ' : 'Connected. ')
+        + 'The board is sending plain numbers: they are drawn in the Serial plotter below. '
+        + '(The 3D hand only moves with ExoHand lines: D, F, M or E.)'
+        + (S.conn.drops ? ` The Bluetooth link has dropped and reconnected ${S.conn.drops}× so far.` : ''), 'ok');
     } else if (wrongFormat && S.linkNote !== 'format') {
       S.linkNote = 'format';
-      setStatus('The board is sending text the page cannot read (see the Serial monitor). Check that the USB speed matches '
-        + 'Serial.begin(...) in the sketch. For the 3D hand, upload flex_devkit_test or multi_flex_devkit.', 'warn');
-    } else if (silent && !wrongFormat && !plotting && S.linkNote !== 'silent') {
+      setStatus(S.mode === 'hc05'
+        ? 'The HC-05 is sending text the page cannot read (see the Serial monitor). The HC-05 and bt.begin(...) in the sketch must both be 9600.'
+        : 'The board is sending text the page cannot read (see the Serial monitor). Check that the USB speed matches '
+          + 'Serial.begin(...) in the sketch. For the 3D hand, upload flex_devkit_test or multi_flex_devkit.', 'warn');
+    } else if (silent && !wrongFormat && !plotting && S.linkNote !== 'silent' && S.linkNote !== 'reconnect') {
       S.linkNote = 'silent';
-      setStatus('Connected, but nothing is arriving from the board. Check that the right sketch is flashed and press the board\'s RST button.', 'warn');
+      setStatus(S.mode === 'hc05'
+        ? 'Connected to the HC-05, but nothing is arriving. Check the Uno runs uno_emg_mg996r_hc05_2nov and the HC-05 wiring (HC-05 RXD ← D11 through the divider).'
+        : 'Connected, but nothing is arriving from the board. Check that the right sketch is flashed and press the board\'s RST button.', 'warn');
     } else if (!silent && railReading(now) && S.linkNote !== 'rail') {
       // a reading stuck at the very bottom or top is a wiring problem, not a bend
       S.linkNote = 'rail';
@@ -592,9 +615,9 @@ function updateUi(now) {
         : `${r.name} reads about 4095: the pin sees the full 3.3 V. Check the 47k resistor to GND (it may be missing or loose).`, 'warn');
     } else if (!silent && !railReading(now) && S.lastGoodAt > S.connectedAt && S.linkNote !== 'live') {
       S.linkNote = 'live';
-      setStatus(S.mode === 'usb' ? 'Connected by USB. Readings coming in.' : 'Connected by Bluetooth. Readings coming in.', 'ok');
+      setStatus({ usb: 'Connected by USB', ble: 'Connected by Bluetooth', hc05: 'Connected to the HC-05' }[S.mode] + '. Readings coming in.', 'ok');
     }
-  } else S.linkNote = '';
+  } else if (!S.conn) S.linkNote = '';
 }
 
 /* ---------------- helpers ---------------- */

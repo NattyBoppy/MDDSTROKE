@@ -97,10 +97,14 @@
       <h2>1 · Connect</h2>
       <div class="row">
         <button class="primary" id="btnUsb">Connect by USB</button>
+        <button class="secondary" id="btnHc05">Connect HC-05 (Bluetooth)</button>
         <button class="secondary" id="btnBle">Connect by Bluetooth</button>
         <button class="secondary" id="btnDemo">Demo (no hardware)</button>
         <button class="ghost" id="btnDisc" hidden>Disconnect</button>
       </div>
+      <p class="hint"><b>Connect HC-05</b> = the Uno's HC-05 Bluetooth module (sketch <code>uno_emg_mg996r_hc05_2nov</code>, always 9600).
+        Pair the HC-05 in your computer's Bluetooth settings first (PIN 1234 or 0000).
+        <b>Connect by Bluetooth</b> = the ESP32 named ExoHand.</p>
       <label class="inline-field">USB speed
         <select id="baud">
           <option value="115200">115200 (ExoHand ESP32 sketches)</option>

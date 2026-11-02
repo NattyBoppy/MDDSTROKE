@@ -33,7 +33,10 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 ## 2 Nov 2026 (part 2): HC-05 Bluetooth sketch
 - New sketch `arduino_ide_code/uno_emg_mg996r_hc05_2nov`: the 29 Oct code + `SoftwareSerial` HC-05 on D10 (RX) / D11 (TX), 9600. Prints the smoothed EMG to USB and Bluetooth.
 - HC-05 paired with the MacBook: shows up as the port `cu.HC-05`. Website run locally (`python3 -m http.server 8000` in `website/`, open `/v2/`); it loads with no errors.
-- Not yet checked: the EMG reaching the website's Serial plotter over Bluetooth (USB speed 9600, Connect by USB, pick HC-05).
+- Website: new **Connect HC-05 (Bluetooth)** button (Web Serial, always 9600, also lists Bluetooth SPP devices). Pill "Connected by HC-05", HC-05-specific error messages, and Open / Close / STOP warn that this sketch doesn't listen. Tested with a pretend HC-05 in the browser: opened at 9600, 40/40 numbers plotted, no console errors. Protocol tests 9/9. New HC-05 checks added to `tests/demo.e2e.mjs` (not run: Playwright not installed).
+- Real HC-05 test (Mac): first no data at all (RXD/TXD wiring), fixed → 567 lines in 12 s (EMG ≈ 20 at rest). Then the link kept dropping after a while in Chrome, while the Arduino IDE plotter kept going. Watching the Mac showed the Bluetooth link dropping **while Chrome still held the port open**, so Chrome never noticed.
+- Fix: the website now reconnects the HC-05 by itself: no data for 3.5 s (or a read error) → close the port and reopen it, retrying every 2 s until it works or Disconnect is pressed. The status shows how many times it dropped. STOP during a reconnect says nothing was sent. Tested with a pretend HC-05 that goes silent and fails its first reopen: reconnected, readings carried on (200 → 435), Disconnect mid-reconnect stops the retries. Checks added to `tests/demo.e2e.mjs`.
+- To do: confirm on the real HC-05 in Chrome. If it drops often, look at the power (servo on the Uno's 5V) and loose HC-05 wires.
 - Watch: `SoftwareSerial` pauses interrupts while sending, so the servo may twitch during a move. No D2 E-stop in this sketch. D10 / D11 clash with the planned SD pins.
 
 ## 2 Nov 2026: upgrade plan with parts on hand (README "Planned next" A)

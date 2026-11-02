@@ -22,6 +22,15 @@ The website has a **Serial plotter + monitor** that works like the Arduino IDE's
 ![serial plotter](screenshots/v2_serial_plotter.png)
 
 The **3D hand** only moves with ExoHand data lines (`D`, `F`, `M`, `E`), which the ESP32 sketches send. The Uno code prints plain numbers, so it shows up in the plotter only.
-Wireless (Bluetooth / Wi-Fi) needs the ESP32-S3; see "Planned next" in the main README.
+
+## Without the cable: the HC-05 Bluetooth module (2 Nov)
+1. Upload [`uno_emg_mg996r_hc05_2nov`](../arduino_ide_code/uno_emg_mg996r_hc05_2nov/) to the Uno (HC-05 TXD → D10, D11 → 1k → HC-05 RXD with 2k to GND).
+2. Pair the HC-05 once in the laptop's Bluetooth settings (PIN `1234` or `0000`).
+3. Open the website in **Chrome** and click **Connect HC-05 (Bluetooth)**. Pick **HC-05** in the pop-up (on a Mac it is called `cu.HC-05`). The speed is set to 9600 for you.
+4. The **Serial plotter** draws the smoothed EMG live, the same as over USB.
+
+**If the link drops** (on a Mac it can drop while the port still looks open), the page notices within about 4 seconds, says "HC-05 link dropped… Reconnecting", and opens it again by itself, like the Arduino IDE's monitor. You don't need to press anything. The status line counts the drops: if it climbs quickly, check the HC-05's wires and the Uno's power (the servo on the Uno's 5V pin can make it reset).
+
+The website's **STOP** and **Open / Close** buttons can't reach this sketch: it only sends, it never listens. The page says so when you press them. Stop the motor by cutting its power.
 
 GitHub publishes this folder automatically every time something changes in it on `main` (see `.github/workflows/pages.yml`).

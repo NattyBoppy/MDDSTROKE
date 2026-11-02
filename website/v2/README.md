@@ -49,6 +49,8 @@ Use **Chrome or Edge on a laptop**. Open the GitHub Pages link above.
 2. A pop-up lists the ports. Pick the board (often **"USB-SERIAL CH343"**, **"CP210x"** or **"USB JTAG/serial"**), then press **Connect**.
 3. The pill at the top turns green: **Connected by USB**. Bend a sensor and the finger moves.
 
+*Uno with an HC-05 Bluetooth module instead:* press **Connect HC-05 (Bluetooth)** and pick **HC-05**. See [`../README.md`](../README.md) (section "Without the cable").
+
 *Bluetooth instead:* press **Connect by Bluetooth** and pick **ExoHand**.
 
 ### 5. Calibrate

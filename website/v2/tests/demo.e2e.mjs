@@ -215,7 +215,7 @@ try {
   check(phone.errors.length === 0, `no console errors on phone${phone.errors.length ? ': ' + phone.errors.join(' | ') : ''}`);
   await phone.context.close();
 
-  // ================= fake USB board + fake Bluetooth device =================
+  // ================= fake USB board + fake Bluetooth device (+ HC-05, which is a serial port too) =================
   // Real Web Serial / Web Bluetooth need hardware, so we swap in pretend ones that behave the same way.
   // This tests the real serial.js / ble.js code: connect, read lines, calibrate, and what gets SENT.
   const fakeHw = await browser.newContext({ viewport: { width: 1280, height: 800 } });
@@ -227,13 +227,14 @@ try {
       readable: null, writable: null,
       async open(opts) {
         window.__baud = opts && opts.baudRate;
+        window.__opens = (window.__opens || 0) + 1;
         this.readable = new ReadableStream({ start(c) { ctrl = c; } });
         this.writable = new WritableStream({ write(chunk) { window.__sent.push('usb:' + dec.decode(chunk)); } });
       },
       async close() {},
     };
     window.__usb = text => ctrl.enqueue(enc.encode(text));
-    Object.defineProperty(navigator, 'serial', { value: { requestPort: async () => port } });
+    Object.defineProperty(navigator, 'serial', { value: { requestPort: async opts => { window.__portOpts = opts; return port; } } });
 
     const listeners = [];
     const tx = { addEventListener: (t, fn) => listeners.push(fn), startNotifications: async () => {} };
@@ -322,6 +323,31 @@ try {
   await hw.waitForTimeout(200);
   const bleSent = await hw.evaluate(() => window.__sent.slice());
   check(JSON.stringify(bleSent) === JSON.stringify(['ble:c', 'ble:s']), `fake Bluetooth: Close, STOP sent exactly ${JSON.stringify(bleSent)}`);
+  await hw.click('#btnDisc');
+  await hw.waitForTimeout(300);
+
+  // --- HC-05 on the Uno (uno_emg_mg996r_hc05_2nov): a Bluetooth serial port, one number per line, always 9600 ---
+  await hw.evaluate(() => { window.__sent.length = 0; window.exo.S.plotted = 0; });
+  await hw.click('#btnHc05');
+  await hw.waitForTimeout(200);
+  check((await hw.textContent('#connPill')).trim() === 'Connected by HC-05', 'fake HC-05: pill says Connected by HC-05');
+  check((await hw.evaluate(() => window.__baud)) === 9600, 'fake HC-05: opened at 9600 whatever the USB speed box says');
+  check((await hw.evaluate(() => JSON.stringify(window.__portOpts))).includes('00001101-0000-1000-8000-00805f9b34fb'), 'fake HC-05: the pop-up also lists Bluetooth serial (SPP) devices');
+  for (let i = 0; i < 12; i++) await feed('__usb', `${(300 + 150 * Math.sin(i / 2)).toFixed(2)}\r\n`, 200);
+  check((await hw.evaluate(() => window.exo.S.plotted)) >= 12 && /Connected to the HC-05/.test(await hw.textContent('#status')), 'fake HC-05: the EMG numbers are plotted');
+  // on a Mac the Bluetooth link can die while the port still looks open: the page must reopen it by itself
+  const opensBefore = await hw.evaluate(() => window.__opens);
+  await hw.waitForTimeout(4500);                                    // nothing arrives for 4.5 s
+  check(/Reconnect/.test(await hw.textContent('#status')) && (await hw.evaluate(() => window.__opens)) > opensBefore, 'fake HC-05: a silent link is closed and reopened by itself');
+  const plottedMid = await hw.evaluate(() => window.exo.S.plotted);
+  for (let i = 0; i < 6; i++) await feed('__usb', '21.50\r\n', 150);
+  check((await hw.evaluate(() => window.exo.S.plotted)) > plottedMid && (await hw.textContent('#connPill')).trim() === 'Connected by HC-05', 'fake HC-05: readings carry on after the reconnect');
+  await hw.click('#cmdStop');
+  await hw.waitForTimeout(200);
+  check(/does NOT move or stop the motor/.test(await hw.textContent('#status')), 'fake HC-05: STOP warns that this sketch does not listen');
+  await hw.click('#btnDisc');
+  await hw.waitForTimeout(300);
+  check((await hw.textContent('#connPill')).trim() === 'Not connected', 'fake HC-05: Disconnect works');
   check(hwErrors.length === 0, `no console errors with fake hardware${hwErrors.length ? ': ' + hwErrors.join(' | ') : ''}`);
   await fakeHw.close();
 

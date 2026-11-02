@@ -64,7 +64,7 @@ When the patient **tries** to open the hand, a sensor on the forearm picks up th
 
 1. **Bluetooth (HC-05) → live data on the laptop / website.**
    - The HC-05 is "classic" Bluetooth. Pair it once with the Windows laptop (PIN `1234` or `0000`); it then appears as an extra **COM port**.
-   - The website's **Serial plotter** opens it like a USB port: USB speed **9600** (the HC-05's default), click **Connect by USB**, pick the Bluetooth COM port. No website change needed for a first test.
+   - The website has a **Connect HC-05 (Bluetooth)** button: it opens the HC-05 at 9600 and the **Serial plotter** draws the EMG. (**Connect by USB** at 9600 also works.)
    - With the D1 wiring above, everything the sketch already prints goes out over USB **and** Bluetooth at the same time, so the first test needs **no code change**.
    - It's one-way (Uno → laptop). If the website should later send `o` / `c` / `s` over Bluetooth: HC-05 TXD → D7 with `SoftwareSerial`. The hardware E-stop stays the real stop either way.
    - **2 Nov sketch** [`arduino_ide_code/uno_emg_mg996r_hc05_2nov`](arduino_ide_code/uno_emg_mg996r_hc05_2nov/) uses `SoftwareSerial` instead: HC-05 TXD → **D10**, D11 → 1k → HC-05 RXD (2k to GND). This takes the SD module's CS / MOSI pins, so move the HC-05 (e.g. D7 / D8) before adding the SD card. On a Mac the HC-05 shows up as the port `cu.HC-05`.
