@@ -30,6 +30,12 @@ Newest entry at the top. Teammates: read the **Current status** and **To-do** fi
 
 ---
 
+## 2 Nov 2026: upgrade plan with parts on hand (README "Planned next" A)
+- Parts on hand: HC-05 Bluetooth, DS3231 real-time clock, YwRobot microSD module + 16 GB card, Adafruit 2.8" TFT cap-touch shield (ILI9341 + FT6206 + own microSD slot).
+- Plan written in the README: HC-05 on D1 (one-way, 1k/2k divider) → laptop COM port → website Serial plotter at 9600; DS3231 on A4/A5; SD on D10–D13; one CSV per session with date/time.
+- Screen parked for the ESP32-S3: as a shield it covers the Uno, uses D9 (servo) and D10, and fills the Uno's memory.
+- Nothing wired or tested yet. To-do: HC-05 test → clock → SD log → combined sketch. Servo on its own supply before adding these.
+
 ## 1 Nov 2026 (part 2): E-stop design, website serial plotter, misc/ folder
 - Moved `firmware/`, `hardware/`, `docs/` and `CLAUDE.md` into `misc/` (a tiny top-level `CLAUDE.md` loads `misc/CLAUDE.md`).
 - Added `design/29oct_back_of_palm_device_holder.3mf` (Base hand 2, Servo Holder, Servo Gear, Idler Gear, spool, Spool Clip) + plate picture.
